@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">Mi Tienda Virtual</title>
-    <!-- Supabase JS Client SDK -->
+    
+    <!-- SDK de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         :root {
             --bg-color: #f4f6f9;
@@ -32,7 +34,7 @@
             position: relative;
         }
 
-        /* Marca de agua / Logo flotante */
+        /* Marca de agua / Logo flotante personalizado */
         #watermark-container {
             position: fixed;
             z-index: 1;
@@ -89,7 +91,7 @@
         }
 
         .btn {
-            padding: 10px 16px;
+            padding: 8px 16px;
             border-radius: 6px;
             border: none;
             cursor: pointer;
@@ -97,7 +99,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.95rem;
+            transition: transform 0.1s, opacity 0.2s;
         }
         .btn:active { transform: scale(0.98); }
         .btn-primary { background-color: var(--primary-color); color: white; }
@@ -229,6 +231,9 @@
             cursor: grab;
             user-select: none;
         }
+        .admin-header:active {
+            cursor: grabbing;
+        }
 
         .admin-body {
             padding: 15px;
@@ -257,52 +262,42 @@
             gap: 5px;
             margin-bottom: 8px;
         }
-        .form-group label { font-size: 0.85rem; font-weight: 600; }
+        .form-group label { font-size: 0.8rem; font-weight: 600; }
         .form-group input, .form-group select {
-            padding: 10px;
+            padding: 6px 10px;
             border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 16px; /* Evita zoom automático en iPhone/Android */
+            border-radius: 4px;
+            font-size: 0.85rem;
         }
 
-        /* MODALES (Sistemas de visualización directa) */
+        /* Modales */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            display: none; /* Oculto por defecto */
+            background: rgba(0,0,0,0.5);
+            display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
         }
-        
         .modal-overlay.active {
-            display: flex !important; /* Muestra inmediatamente */
+            opacity: 1;
+            pointer-events: auto; /* Corrección crítica para móviles */
         }
 
         .modal {
             background: white;
-            padding: 24px;
-            border-radius: 12px;
+            padding: 20px;
+            border-radius: 10px;
             width: 90%;
             max-width: 450px;
             color: #1f2937;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
         }
 
-        /* Input de contraseña optimizado para móviles */
-        .mobile-input {
-            width: 100%;
-            height: 48px;
-            padding: 10px 14px;
-            font-size: 16px !important;
-            border: 2px solid #3b82f6;
-            border-radius: 8px;
-            outline: none;
-            background-color: #fff;
-            color: #000;
-        }
-
+        /* Modales específicos */
         #cart-modal .cart-item {
             display: flex;
             align-items: center;
@@ -316,8 +311,8 @@
             gap: 8px;
         }
         .cart-controls button {
-            width: 30px;
-            height: 30px;
+            width: 25px;
+            height: 25px;
             border-radius: 4px;
             border: 1px solid #ccc;
             cursor: pointer;
@@ -335,7 +330,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             transform: translateY(150%);
             transition: transform 0.3s ease;
-            z-index: 10000;
+            z-index: 3000;
             font-weight: 600;
         }
         #toast.show {
@@ -354,7 +349,7 @@
     <header>
         <div class="brand-container">
             <img id="nav-logo" class="header-logo hidden" alt="Logo">
-            <span id="nav-brand-name" class="brand-name">Mi Tienda</span>
+            <span id="nav-brand-name" class="brand-name">Cargando tienda...</span>
         </div>
         <div class="nav-actions">
             <button id="admin-gear-btn" class="btn btn-secondary hidden" onclick="toggleAdminPanel()" title="Abrir Herramientas Admin">⚙️</button>
@@ -373,7 +368,7 @@
         </div>
 
         <div id="products-container" class="products-grid">
-            <!-- Productos generados con JS -->
+            <!-- Productos generados con JS desde Supabase -->
         </div>
     </main>
 
@@ -390,23 +385,23 @@
                 <h4>🎨 Apariencia y Colores</h4>
                 <div class="form-group">
                     <label>Nombre de la Tienda</label>
-                    <input type="text" id="cfg-site-name" oninput="updateConfig()">
+                    <input type="text" id="cfg-site-name" onchange="updateConfigInSupabase()">
                 </div>
                 <div class="form-group">
                     <label>Color Fondo General</label>
-                    <input type="color" id="cfg-bg-color" onchange="updateConfig()">
+                    <input type="color" id="cfg-bg-color" onchange="updateConfigInSupabase()">
                 </div>
                 <div class="form-group">
                     <label>Color Principal (Botones y destacados)</label>
-                    <input type="color" id="cfg-primary-color" onchange="updateConfig()">
+                    <input type="color" id="cfg-primary-color" onchange="updateConfigInSupabase()">
                 </div>
                 <div class="form-group">
                     <label>Color Encabezado</label>
-                    <input type="color" id="cfg-header-bg" onchange="updateConfig()">
+                    <input type="color" id="cfg-header-bg" onchange="updateConfigInSupabase()">
                 </div>
                 <div class="form-group">
                     <label>Color Texto</label>
-                    <input type="color" id="cfg-text-color" onchange="updateConfig()">
+                    <input type="color" id="cfg-text-color" onchange="updateConfigInSupabase()">
                 </div>
             </div>
 
@@ -414,8 +409,8 @@
             <div class="admin-section">
                 <h4>📱 Confirmación por WhatsApp</h4>
                 <div class="form-group">
-                    <label>Número de WhatsApp (ej: 5350000000)</label>
-                    <input type="tel" id="cfg-whatsapp" placeholder="Ej: 5350000000" oninput="updateConfig()">
+                    <label>Número de WhatsApp (con código de país, ej: 34600000000)</label>
+                    <input type="tel" id="cfg-whatsapp" placeholder="Ej: 5350000000" onchange="updateConfigInSupabase()">
                 </div>
             </div>
 
@@ -423,12 +418,12 @@
             <div class="admin-section">
                 <h4>🖼️ Logo / Marca de Agua</h4>
                 <div class="form-group">
-                    <label>Subir Imagen PNG</label>
-                    <input type="file" id="cfg-logo-file" accept="image/png, image/jpeg" onchange="handleLogoUpload(event)">
+                    <label>Subir Imagen</label>
+                    <input type="file" id="cfg-logo-file" accept="image/*" onchange="handleLogoUpload(event)">
                 </div>
                 <div class="form-group">
                     <label>Posición de la Marca</label>
-                    <select id="cfg-logo-pos" onchange="updateConfig()">
+                    <select id="cfg-logo-pos" onchange="updateConfigInSupabase()">
                         <option value="none">Oculta</option>
                         <option value="nav">Encabezado (Junto al título)</option>
                         <option value="pos-top-left">Fondo Arriba Izquierda</option>
@@ -460,7 +455,7 @@
                         <label>Imagen del Producto</label>
                         <input type="file" id="prod-img" accept="image/*" required>
                     </div>
-                    <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 5px;">Publicar Producto</button>
+                    <button type="submit" id="btn-save-prod" class="btn btn-success" style="width: 100%; margin-top: 5px;">Publicar Producto</button>
                 </form>
             </div>
 
@@ -477,17 +472,16 @@
         </div>
     </div>
 
-    <!-- Modal Login Admin (Optimizado) -->
+    <!-- Modal Login Admin -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal">
-            <h3 style="margin-bottom: 8px;">Acceso de Administrador</h3>
-            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 15px;">Ingresa la contraseña para abrir el panel de edición.</p>
-            
+            <h3>Acceso de Administrador</h3>
+            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 15px;">Ingresa la contraseña para acceder al panel de edición.</p>
             <form onsubmit="event.preventDefault(); loginAdmin();">
                 <div class="form-group">
-                    <input type="password" id="admin-pass-input" class="mobile-input" placeholder="Escribe la contraseña..." autocomplete="current-password" required>
+                    <input type="password" id="admin-pass-input" placeholder="Contraseña">
                 </div>
-                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
                     <button type="button" class="btn btn-secondary" onclick="closeLoginModal()">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Entrar</button>
                 </div>
@@ -500,7 +494,7 @@
         <div class="modal" style="max-width: 500px;">
             <h3>Tu Carrito de Compras</h3>
             <div id="cart-items-container" style="max-height: 300px; overflow-y: auto; margin: 15px 0;">
-                <!-- Elementos dinámicos -->
+                <!-- Elementos del carrito dinámicos -->
             </div>
             <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px;">
                 <span>Total:</span>
@@ -513,172 +507,141 @@
         </div>
     </div>
 
-    <!-- Modal Checkout -->
+    <!-- Modal Éxito / WhatsApp -->
     <div id="checkout-modal" class="modal-overlay">
         <div class="modal" style="text-align: center;">
             <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
             <h3 style="margin-bottom: 10px;">¡Gracias por tu compra!</h3>
             <p id="checkout-msg" style="font-size: 0.95rem; color: #4b5563; margin-bottom: 20px;">
-                Tu pedido ha sido procesado con éxito y el inventario ha sido actualizado.
+                Tu pedido ha sido procesado con éxito y el inventario se actualizó en la nube.
             </p>
-            <div id="whatsapp-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            <div id="whatsapp-container" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Botón de WhatsApp insertado dinámicamente -->
+            </div>
             <button class="btn btn-secondary" style="width: 100%; margin-top: 12px; justify-content: center;" onclick="closeCheckoutModal()">Cerrar</button>
         </div>
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast">Cargando...</div>
+    <div id="toast">Notificación</div>
 
-    <!-- JS Y SUPABASE -->
+    <!-- LÓGICA JAVASCRIPT CON SUPABASE -->
     <script>
-        const SUPABASE_URL = "https://okovbiocthvchbowybyd.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_-GnEgsH0dN3utpgX047szQ_6q7XCfkV";
-        const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+        // --- CONEXIÓN CON SUPABASE ---
+        // Reemplaza estas dos constantes con las credenciales de tu proyecto Supabase:
+        const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
+        const SUPABASE_ANON_KEY = 'tu-anon-key-aqui';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let config = {
-            siteName: "Mi Tienda Virtual",
-            bgColor: "#f4f6f9",
-            primaryColor: "#2563eb",
-            headerBg: "#ffffff",
-            textColor: "#1f2937",
-            logoData: "",
-            logoPos: "none",
-            adminPass: "admin123",
-            whatsappNumber: ""
+            site_name: "Mi Tienda Virtual",
+            bg_color: "#f4f6f9",
+            primary_color: "#2563eb",
+            header_bg: "#ffffff",
+            text_color: "#1f2937",
+            logo_url: "",
+            logo_pos: "none",
+            admin_pass: "admin123",
+            whatsapp_number: ""
         };
 
         let products = [];
-        let cart = JSON.parse(localStorage.getItem('app_cart')) || [];
+        let cart = JSON.parse(localStorage.getItem('app_cart')) || []; // El carrito se mantiene por usuario/navegador
         let isAdmin = false;
 
         window.addEventListener('DOMContentLoaded', async () => {
-            initDraggablePanel();
-            showToast("Cargando datos desde Supabase...");
-            
-            await fetchConfigFromSupabase();
-            await fetchProductsFromSupabase();
-
-            applyConfig();
-            renderProducts();
+            await loadConfigFromSupabase();
+            await renderProducts();
             updateCartBadge();
+            initDraggablePanel();
         });
 
-        function saveCart() {
-            localStorage.setItem('app_cart', JSON.stringify(cart));
-        }
+        // --- COMPRESOR DE IMÁGENES PARA MÓVILES (Evita consumo excesivo de red) ---
+        function compressImage(file, maxWidth, maxHeight, quality) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
 
-        async function fetchConfigFromSupabase() {
-            if (!supabase) return;
-            try {
-                const { data, error } = await supabase.from('store_config').select('*').eq('id', 1).single();
-                if (data && !error) {
-                    config = {
-                        siteName: data.site_name || config.siteName,
-                        bgColor: data.bg_color || config.bgColor,
-                        primaryColor: data.primary_color || config.primaryColor,
-                        headerBg: data.header_bg || config.headerBg,
-                        textColor: data.text_color || config.textColor,
-                        logoData: data.logo_data || "",
-                        logoPos: data.logo_pos || "none",
-                        adminPass: data.admin_pass || "admin123",
-                        whatsappNumber: data.whatsapp_number || ""
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height = Math.round((height * maxWidth) / width);
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width = Math.round((width * maxHeight) / height);
+                                height = maxHeight;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        canvas.toBlob((blob) => {
+                            resolve(blob);
+                        }, 'image/jpeg', quality);
                     };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // --- SUBIR IMAGEN A SUPABASE STORAGE ---
+        async function uploadFileToSupabase(blobFile, path) {
+            const fileName = `${Date.now()}_${path}`;
+            const { data, error } = await supabase.storage.from('imagenes').upload(fileName, blobFile, {
+                contentType: 'image/jpeg',
+                upsert: true
+            });
+
+            if (error) {
+                console.error("Error subiendo imagen:", error);
+                throw error;
+            }
+
+            const { data: publicUrlData } = supabase.storage.from('imagenes').getPublicUrl(fileName);
+            return publicUrlData.publicUrl;
+        }
+
+        // --- GESTIÓN DE CONFIGURACIÓN CON SUPABASE ---
+        async function loadConfigFromSupabase() {
+            try {
+                const { data, error } = await supabase.from('configuracion').select('*').eq('id', 1).single();
+                if (data) {
+                    config = { ...config, ...data };
                 }
             } catch (err) {
-                console.warn("Error Supabase Config:", err);
+                console.warn("No se pudo cargar la configuración de Supabase, usando valores por defecto.");
             }
-        }
-
-        async function fetchProductsFromSupabase() {
-            if (!supabase) return;
-            try {
-                const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-                if (data && !error) {
-                    products = data.map(item => ({
-                        id: item.id,
-                        name: item.name,
-                        price: parseFloat(item.price),
-                        stock: parseInt(item.stock),
-                        image: item.image
-                    }));
-                }
-            } catch (err) {
-                console.warn("Error Supabase Products:", err);
-            }
-        }
-
-        async function syncConfigToSupabase() {
-            if (!supabase) return;
-            try {
-                await supabase.from('store_config').upsert({
-                    id: 1,
-                    site_name: config.siteName,
-                    bg_color: config.bgColor,
-                    primary_color: config.primaryColor,
-                    header_bg: config.headerBg,
-                    text_color: config.textColor,
-                    logo_data: config.logoData,
-                    logo_pos: config.logoPos,
-                    admin_pass: config.adminPass,
-                    whatsapp_number: config.whatsappNumber
-                });
-            } catch (err) {
-                console.error("Error guardando config:", err);
-            }
-        }
-
-        function initDraggablePanel() {
-            const panel = document.getElementById('admin-panel');
-            const header = document.getElementById('admin-panel-header');
-            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-
-            header.onmousedown = (e) => {
-                if (e.target.tagName === 'BUTTON') return;
-                e.preventDefault();
-                pos3 = e.clientX; pos4 = e.clientY;
-                document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; };
-                document.onmousemove = (e) => {
-                    pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
-                    pos3 = e.clientX; pos4 = e.clientY;
-                    panel.style.top = (panel.offsetTop - pos2) + "px";
-                    panel.style.left = (panel.offsetLeft - pos1) + "px";
-                    panel.style.bottom = 'auto';
-                };
-            };
-
-            header.ontouchstart = (e) => {
-                if (e.target.tagName === 'BUTTON') return;
-                const touch = e.touches[0];
-                pos3 = touch.clientX; pos4 = touch.clientY;
-                document.ontouchend = () => { document.ontouchend = null; document.ontouchmove = null; };
-                document.ontouchmove = (e) => {
-                    const touch = e.touches[0];
-                    pos1 = pos3 - touch.clientX; pos2 = pos4 - touch.clientY;
-                    pos3 = touch.clientX; pos4 = touch.clientY;
-                    panel.style.top = (panel.offsetTop - pos2) + "px";
-                    panel.style.left = (panel.offsetLeft - pos1) + "px";
-                    panel.style.bottom = 'auto';
-                };
-            };
+            applyConfig();
         }
 
         function applyConfig() {
-            document.title = config.siteName;
-            document.getElementById('nav-brand-name').innerText = config.siteName;
-            document.getElementById('hero-title').innerText = `¡Bienvenidos a ${config.siteName}!`;
-            document.getElementById('cfg-site-name').value = config.siteName;
-            document.getElementById('cfg-whatsapp').value = config.whatsappNumber || '';
+            document.title = config.site_name;
+            document.getElementById('nav-brand-name').innerText = config.site_name;
+            document.getElementById('hero-title').innerText = `¡Bienvenidos a ${config.site_name}!`;
+            document.getElementById('cfg-site-name').value = config.site_name;
 
-            document.documentElement.style.setProperty('--bg-color', config.bgColor);
-            document.documentElement.style.setProperty('--primary-color', config.primaryColor);
-            document.documentElement.style.setProperty('--header-bg', config.headerBg);
-            document.documentElement.style.setProperty('--text-color', config.textColor);
+            document.getElementById('cfg-whatsapp').value = config.whatsapp_number || '';
 
-            document.getElementById('cfg-bg-color').value = config.bgColor;
-            document.getElementById('cfg-primary-color').value = config.primaryColor;
-            document.getElementById('cfg-header-bg').value = config.headerBg;
-            document.getElementById('cfg-text-color').value = config.textColor;
-            document.getElementById('cfg-logo-pos').value = config.logoPos;
+            document.documentElement.style.setProperty('--bg-color', config.bg_color);
+            document.documentElement.style.setProperty('--primary-color', config.primary_color);
+            document.documentElement.style.setProperty('--header-bg', config.header_bg);
+            document.documentElement.style.setProperty('--text-color', config.text_color);
+
+            document.getElementById('cfg-bg-color').value = config.bg_color;
+            document.getElementById('cfg-primary-color').value = config.primary_color;
+            document.getElementById('cfg-header-bg').value = config.header_bg;
+            document.getElementById('cfg-text-color').value = config.text_color;
+            document.getElementById('cfg-logo-pos').value = config.logo_pos;
 
             const navLogo = document.getElementById('nav-logo');
             const watermark = document.getElementById('watermark-container');
@@ -687,123 +650,75 @@
             watermark.innerHTML = '';
             watermark.className = '';
 
-            if (config.logoData) {
-                if (config.logoPos === 'nav') {
-                    navLogo.src = config.logoData;
+            if (config.logo_url) {
+                if (config.logo_pos === 'nav') {
+                    navLogo.src = config.logo_url;
                     navLogo.classList.remove('hidden');
-                } else if (config.logoPos !== 'none') {
-                    watermark.classList.add(config.logoPos);
+                } else if (config.logo_pos !== 'none') {
+                    watermark.classList.add(config.logo_pos);
                     const img = document.createElement('img');
-                    img.src = config.logoData;
+                    img.src = config.logo_url;
                     watermark.appendChild(img);
                 }
             }
         }
 
-        async function updateConfig() {
-            config.siteName = document.getElementById('cfg-site-name').value || "Mi Tienda";
-            config.bgColor = document.getElementById('cfg-bg-color').value;
-            config.primaryColor = document.getElementById('cfg-primary-color').value;
-            config.headerBg = document.getElementById('cfg-header-bg').value;
-            config.textColor = document.getElementById('cfg-text-color').value;
-            config.logoPos = document.getElementById('cfg-logo-pos').value;
-            config.whatsappNumber = document.getElementById('cfg-whatsapp').value.trim();
+        async function updateConfigInSupabase() {
+            config.site_name = document.getElementById('cfg-site-name').value || "Mi Tienda";
+            config.bg_color = document.getElementById('cfg-bg-color').value;
+            config.primary_color = document.getElementById('cfg-primary-color').value;
+            config.header_bg = document.getElementById('cfg-header-bg').value;
+            config.text_color = document.getElementById('cfg-text-color').value;
+            config.logo_pos = document.getElementById('cfg-logo-pos').value;
+            config.whatsapp_number = document.getElementById('cfg-whatsapp').value.trim();
 
             applyConfig();
-            await syncConfigToSupabase();
+
+            const { error } = await supabase.from('configuracion').upsert({
+                id: 1,
+                site_name: config.site_name,
+                bg_color: config.bg_color,
+                primary_color: config.primary_color,
+                header_bg: config.header_bg,
+                text_color: config.text_color,
+                logo_pos: config.logo_pos,
+                whatsapp_number: config.whatsapp_number,
+                logo_url: config.logo_url,
+                admin_pass: config.admin_pass
+            });
+
+            if (error) {
+                alert("Error actualizando la configuración en la nube.");
+            } else {
+                showToast("Configuración guardada en la nube");
+            }
         }
 
-        function handleLogoUpload(event) {
+        async function handleLogoUpload(event) {
             const file = event.target.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    config.logoData = e.target.result;
-                    if(config.logoPos === 'none') config.logoPos = 'nav';
-                    applyConfig();
-                    await syncConfigToSupabase();
-                    showToast("Logo actualizado");
-                };
-                reader.readAsDataURL(file);
+                showToast("Subiendo logo...");
+                const blob = await compressImage(file, 400, 400, 0.8);
+                const logoPublicUrl = await uploadFileToSupabase(blob, "logo.jpg");
+                config.logo_url = logoPublicUrl;
+                if(config.logo_pos === 'none') config.logo_pos = 'nav';
+                await updateConfigInSupabase();
             }
         }
 
-        // --- APERTURA Y LOGIN DE MODO ADMIN (OPTIMIZADO PARA MÓVILES) ---
-        function openLoginModal() {
-            if (isAdmin) {
-                logoutAdmin();
-            } else {
-                const modal = document.getElementById('login-modal');
-                const passInput = document.getElementById('admin-pass-input');
-                
-                passInput.value = '';
-                
-                // Muestra la ventana modal de forma síncrona
-                modal.classList.add('active');
-                
-                // Enfoca y activa el teclado de forma directa en el evento de toque
-                passInput.focus();
-                passInput.click();
-            }
-        }
-
-        function closeLoginModal() {
-            document.getElementById('login-modal').classList.remove('active');
-            document.getElementById('admin-pass-input').value = '';
-        }
-
-        function loginAdmin() {
-            const passInput = document.getElementById('admin-pass-input').value;
-            if (passInput === config.adminPass) {
-                isAdmin = true;
-                document.getElementById('admin-panel').classList.remove('hidden');
-                document.getElementById('admin-gear-btn').classList.remove('hidden');
-                document.getElementById('admin-toggle-btn').innerText = 'Cerrar Modo Admin';
-                document.getElementById('admin-toggle-btn').classList.replace('btn-secondary', 'btn-danger');
-                closeLoginModal();
-                renderProducts();
-                showToast("Modo Administrador activado");
-            } else {
-                alert("Contraseña incorrecta");
-            }
-        }
-
-        function logoutAdmin() {
-            isAdmin = false;
-            document.getElementById('admin-panel').classList.add('hidden');
-            document.getElementById('admin-gear-btn').classList.add('hidden');
-            document.getElementById('admin-toggle-btn').innerText = 'Modo Admin';
-            document.getElementById('admin-toggle-btn').classList.replace('btn-danger', 'btn-secondary');
-            renderProducts();
-            showToast("Modo Administrador desactivado");
-        }
-
-        function closeAdminPanelWindow() {
-            document.getElementById('admin-panel').classList.add('hidden');
-            showToast("Panel oculto");
-        }
-
-        function toggleAdminPanel() {
-            if (isAdmin) {
-                document.getElementById('admin-panel').classList.toggle('hidden');
-            }
-        }
-
-        async function changeAdminPassword() {
-            const newPass = document.getElementById('cfg-admin-pass').value;
-            if (newPass.trim().length > 0) {
-                config.adminPass = newPass.trim();
-                await syncConfigToSupabase();
-                document.getElementById('cfg-admin-pass').value = '';
-                showToast("Contraseña actualizada exitosamente");
-            } else {
-                alert("Ingresa una contraseña válida");
-            }
-        }
-
-        // --- PRODUCTOS ---
-        function renderProducts() {
+        // --- GESTIÓN DE PRODUCTOS CON SUPABASE ---
+        async function renderProducts() {
             const container = document.getElementById('products-container');
+            container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Cargando catálogo...</p>';
+
+            const { data, error } = await supabase.from('productos').select('*').order('id', { ascending: false });
+
+            if (error) {
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color:red;">Error al cargar productos desde la base de datos.</p>';
+                return;
+            }
+
+            products = data || [];
             container.innerHTML = '';
 
             if (products.length === 0) {
@@ -835,79 +750,201 @@
             });
         }
 
-        function saveProduct(event) {
+        async function saveProduct(event) {
             event.preventDefault();
-            const name = document.getElementById('prod-name').value;
-            const price = parseFloat(document.getElementById('prod-price').value);
-            const stock = parseInt(document.getElementById('prod-stock').value);
-            const imgFile = document.getElementById('prod-img').files[0];
+            const btn = document.getElementById('btn-save-prod');
+            btn.disabled = true;
+            btn.innerText = "Subiendo a la nube...";
 
-            if (imgFile) {
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    const newProduct = {
-                        id: Date.now().toString(),
+            try {
+                const name = document.getElementById('prod-name').value;
+                const price = parseFloat(document.getElementById('prod-price').value);
+                const stock = parseInt(document.getElementById('prod-stock').value);
+                const imgFile = document.getElementById('prod-img').files[0];
+
+                if (imgFile) {
+                    const compressedBlob = await compressImage(imgFile, 800, 800, 0.8);
+                    const imageUrl = await uploadFileToSupabase(compressedBlob, "producto.jpg");
+
+                    const { error } = await supabase.from('productos').insert([{
                         name,
                         price,
                         stock,
-                        image: e.target.result
-                    };
+                        image: imageUrl
+                    }]);
 
-                    showToast("Publicando producto...");
+                    if (error) throw error;
 
-                    if (supabase) {
-                        await supabase.from('products').insert([{
-                            id: newProduct.id,
-                            name: newProduct.name,
-                            price: newProduct.price,
-                            stock: newProduct.stock,
-                            image: newProduct.image
-                        }]);
-                    }
-
-                    products.unshift(newProduct);
-                    renderProducts();
+                    await renderProducts();
                     document.getElementById('add-product-form').reset();
-                    showToast("Producto publicado correctamente");
-                };
-                reader.readAsDataURL(imgFile);
+                    showToast("¡Producto publicado en la nube!");
+                }
+            } catch (err) {
+                alert("Error publicando el producto: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Publicar Producto";
             }
         }
 
         async function deleteProduct(id) {
-            if (confirm("¿Estás seguro de eliminar este producto?")) {
-                showToast("Eliminando producto...");
-                if (supabase) {
-                    await supabase.from('products').delete().eq('id', id);
+            if (confirm("¿Estás seguro de eliminar este producto de la nube?")) {
+                const { error } = await supabase.from('productos').delete().eq('id', id);
+                if (!error) {
+                    cart = cart.filter(c => c.id !== id);
+                    localStorage.setItem('app_cart', JSON.stringify(cart));
+                    await renderProducts();
+                    updateCartBadge();
+                    showToast("Producto eliminado");
+                } else {
+                    alert("No se pudo eliminar el producto");
                 }
-                products = products.filter(p => p.id !== id);
-                cart = cart.filter(c => c.id !== id);
-                saveCart();
-                renderProducts();
-                updateCartBadge();
-                showToast("Producto eliminado");
             }
         }
 
-        // --- CARRITO ---
+        // --- SISTEMA DE AUTENTICACIÓN Y PANELES ---
+        function openLoginModal() {
+            if (isAdmin) {
+                logoutAdmin();
+            } else {
+                document.getElementById('login-modal').classList.add('active');
+            }
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.remove('active');
+            document.getElementById('admin-pass-input').value = '';
+        }
+
+        function loginAdmin() {
+            const passInput = document.getElementById('admin-pass-input').value;
+            if (passInput === config.admin_pass) {
+                isAdmin = true;
+                document.getElementById('admin-panel').classList.remove('hidden');
+                document.getElementById('admin-gear-btn').classList.remove('hidden');
+                document.getElementById('admin-toggle-btn').innerText = 'Cerrar Modo Admin';
+                document.getElementById('admin-toggle-btn').classList.replace('btn-secondary', 'btn-danger');
+                closeLoginModal();
+                renderProducts();
+                showToast("Modo Administrador activado");
+            } else {
+                alert("Contraseña incorrecta");
+            }
+        }
+
+        function logoutAdmin() {
+            isAdmin = false;
+            document.getElementById('admin-panel').classList.add('hidden');
+            document.getElementById('admin-gear-btn').classList.add('hidden');
+            document.getElementById('admin-toggle-btn').innerText = 'Modo Admin';
+            document.getElementById('admin-toggle-btn').classList.replace('btn-danger', 'btn-secondary');
+            renderProducts();
+            showToast("Modo Administrador desactivado");
+        }
+
+        function closeAdminPanelWindow() {
+            document.getElementById('admin-panel').classList.add('hidden');
+            showToast("Panel oculto");
+        }
+
+        function toggleAdminPanel() {
+            if (isAdmin) {
+                const panel = document.getElementById('admin-panel');
+                panel.classList.toggle('hidden');
+            }
+        }
+
+        async function changeAdminPassword() {
+            const newPass = document.getElementById('cfg-admin-pass').value;
+            if (newPass.trim().length > 0) {
+                config.admin_pass = newPass.trim();
+                await updateConfigInSupabase();
+                document.getElementById('cfg-admin-pass').value = '';
+                showToast("Contraseña de admin actualizada");
+            }
+        }
+
+        // --- ARRASTRE DE VENTANA MÓVIL OPTIMIZADO ---
+        function initDraggablePanel() {
+            const panel = document.getElementById('admin-panel');
+            const header = document.getElementById('admin-panel-header');
+
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            header.onmousedown = dragMouseDown;
+            header.ontouchstart = dragTouchStart;
+
+            function dragMouseDown(e) {
+                if (e.target.tagName === 'BUTTON') return;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                panel.style.top = (panel.offsetTop - pos2) + "px";
+                panel.style.left = (panel.offsetLeft - pos1) + "px";
+                panel.style.bottom = 'auto';
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+
+            function dragTouchStart(e) {
+                if (['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+                const touch = e.touches[0];
+                pos3 = touch.clientX;
+                pos4 = touch.clientY;
+                document.ontouchend = closeTouchElement;
+                document.ontouchmove = elementTouchDrag;
+            }
+
+            function elementTouchDrag(e) {
+                if (e.cancelable) e.preventDefault();
+                const touch = e.touches[0];
+                pos1 = pos3 - touch.clientX;
+                pos2 = pos4 - touch.clientY;
+                pos3 = touch.clientX;
+                pos4 = touch.clientY;
+                panel.style.top = (panel.offsetTop - pos2) + "px";
+                panel.style.left = (panel.offsetLeft - pos1) + "px";
+                panel.style.bottom = 'auto';
+            }
+
+            function closeTouchElement() {
+                document.ontouchend = null;
+                document.ontouchmove = null;
+            }
+        }
+
+        // --- CARRITO LOCAL Y CHECKOUT ---
         function addToCart(productId) {
-            const product = products.find(p => p.id === productId);
+            const product = products.find(p => String(p.id) === String(productId));
             if (!product || product.stock <= 0) return;
 
-            const cartItem = cart.find(c => c.id === productId);
+            const cartItem = cart.find(c => String(c.id) === String(productId));
 
             if (cartItem) {
                 if (cartItem.qty < product.stock) {
                     cartItem.qty++;
                 } else {
-                    alert("No puedes agregar más unidades de las disponibles.");
+                    alert("No puedes agregar más unidades del stock disponible.");
                     return;
                 }
             } else {
                 cart.push({ id: productId, qty: 1 });
             }
 
-            saveCart();
+            localStorage.setItem('app_cart', JSON.stringify(cart));
             updateCartBadge();
             showToast("¡Producto añadido al carrito!");
         }
@@ -939,7 +976,7 @@
             }
 
             cart.forEach(item => {
-                const product = products.find(p => p.id === item.id);
+                const product = products.find(p => String(p.id) === String(item.id));
                 if (!product) return;
 
                 const subtotal = product.price * item.qty;
@@ -966,15 +1003,15 @@
         }
 
         function changeCartQty(id, change) {
-            const item = cart.find(c => c.id === id);
-            const product = products.find(p => p.id === id);
+            const item = cart.find(c => String(c.id) === String(id));
+            const product = products.find(p => String(p.id) === String(id));
             if (!item || !product) return;
 
             if (change === 1) {
                 if (item.qty < product.stock) {
                     item.qty++;
                 } else {
-                    alert("Alcanzaste el límite de stock.");
+                    alert("Alcanzaste el límite de stock disponible.");
                 }
             } else if (change === -1) {
                 item.qty--;
@@ -983,48 +1020,45 @@
                     return;
                 }
             }
-            saveCart();
+            localStorage.setItem('app_cart', JSON.stringify(cart));
             renderCartItems();
             updateCartBadge();
         }
 
         function removeFromCart(id) {
-            cart = cart.filter(c => c.id !== id);
-            saveCart();
+            cart = cart.filter(c => String(c.id) !== String(id));
+            localStorage.setItem('app_cart', JSON.stringify(cart));
             renderCartItems();
             updateCartBadge();
         }
 
-        // --- CHECKOUT ---
         async function checkout() {
             if (cart.length === 0) {
                 alert("El carrito está vacío");
                 return;
             }
 
-            let orderSummary = `🛍️ *Nuevo Pedido - ${config.siteName || "Mi Tienda"}*\n\n`;
+            let orderSummary = `🛍️ *Nuevo Pedido - ${config.site_name || "Mi Tienda"}*\n\n`;
             let grandTotal = 0;
 
-            for (const cartItem of cart) {
-                const product = products.find(p => p.id === cartItem.id);
+            // Actualizar el stock de los productos comprados directamente en Supabase
+            for (let cartItem of cart) {
+                const product = products.find(p => String(p.id) === String(cartItem.id));
                 if (product) {
                     const subtotal = product.price * cartItem.qty;
                     grandTotal += subtotal;
                     orderSummary += `• ${product.name} x${cartItem.qty} - $${subtotal.toFixed(2)}\n`;
 
-                    product.stock = Math.max(0, product.stock - cartItem.qty);
-
-                    if (supabase) {
-                        await supabase.from('products').update({ stock: product.stock }).eq('id', product.id);
-                    }
+                    const newStock = Math.max(0, product.stock - cartItem.qty);
+                    await supabase.from('productos').update({ stock: newStock }).eq('id', product.id);
                 }
             }
 
             orderSummary += `\n*Total a pagar: $${grandTotal.toFixed(2)}*`;
 
             cart = [];
-            saveCart();
-            renderProducts();
+            localStorage.setItem('app_cart', JSON.stringify(cart));
+            await renderProducts();
             renderCartItems();
             updateCartBadge();
             toggleCart();
@@ -1032,7 +1066,7 @@
             const waContainer = document.getElementById('whatsapp-container');
             waContainer.innerHTML = '';
 
-            const cleanPhone = (config.whatsappNumber || '').replace(/[^0-9]/g, '');
+            const cleanPhone = (config.whatsapp_number || '').replace(/[^0-9]/g, '');
 
             if (cleanPhone.length > 0) {
                 const encodedMsg = encodeURIComponent(orderSummary);
@@ -1040,10 +1074,10 @@
 
                 waContainer.innerHTML = `
                     <p style="font-size: 0.85rem; color: #374151; margin-bottom: 5px;">
-                        Para coordinar el pago y envío, envía tu comprobante a WhatsApp:
+                        Para coordinar el pago y envío, envía tu pedido directamente por WhatsApp:
                     </p>
                     <a href="${waLink}" target="_blank" class="btn btn-whatsapp" style="text-decoration: none; justify-content: center;">
-                        📲 Enviar Comprobante por WhatsApp
+                        📲 Enviar Pedido por WhatsApp
                     </a>
                 `;
             }
@@ -1066,4 +1100,3 @@
     </script>
 </body>
 </html>
-
