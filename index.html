@@ -414,6 +414,15 @@
                 </div>
             </div>
 
+            <!-- Costo de Envío a Domicilio -->
+            <div class="admin-section">
+                <h4>🚚 Envío a Domicilio</h4>
+                <div class="form-group">
+                    <label>Costo de Envío ($)</label>
+                    <input type="number" step="0.01" min="0" id="cfg-delivery-fee" placeholder="0.00" oninput="updateConfig()">
+                </div>
+            </div>
+
             <!-- Marca de Agua / Logotipo PNG -->
             <div class="admin-section">
                 <h4>🖼️ Logo / Marca de Agua</h4>
@@ -494,7 +503,20 @@
             <div id="cart-items-container" style="max-height: 300px; overflow-y: auto; margin: 15px 0;">
                 <!-- Elementos del carrito dinámicos -->
             </div>
-            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px;">
+
+            <!-- Opción Entrega a Domicilio -->
+            <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer;">
+                    <input type="checkbox" id="delivery-checkbox" onchange="toggleDeliveryOption()">
+                    <span>🚚 Entrega a domicilio (<span id="delivery-cost-display">+$0.00</span>)</span>
+                </label>
+                <div id="delivery-address-container" class="hidden form-group" style="margin-top: 10px;">
+                    <label>Dirección exacta de entrega:</label>
+                    <input type="text" id="delivery-address" placeholder="Ej: Calle Principal #123 e/ 1ra y 2da">
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1rem; margin-top: 15px; margin-bottom: 15px;">
                 <span>Total:</span>
                 <span id="cart-total">$0.00</span>
             </div>
@@ -539,7 +561,8 @@
             logoData: "",
             logoPos: "none",
             adminPass: "admin123",
-            whatsappNumber: ""
+            whatsappNumber: "",
+            deliveryFee: 0
         };
 
         let config = { ...defaultConfig };
@@ -574,7 +597,8 @@
                         logoData: data.logo_url || "",
                         logoPos: data.logo_pos || "none",
                         adminPass: data.admin_pass || defaultConfig.adminPass,
-                        whatsappNumber: data.whatsapp_number || ""
+                        whatsappNumber: data.whatsapp_number || "",
+                        deliveryFee: data.delivery_fee !== undefined && data.delivery_fee !== null ? parseFloat(data.delivery_fee) : 0
                     };
                 }
             } catch (err) {
@@ -591,6 +615,7 @@
             config.textColor = document.getElementById('cfg-text-color').value;
             config.logoPos = document.getElementById('cfg-logo-pos').value;
             config.whatsappNumber = document.getElementById('cfg-whatsapp').value.trim();
+            config.deliveryFee = parseFloat(document.getElementById('cfg-delivery-fee').value) || 0;
 
             applyConfig();
 
@@ -602,7 +627,8 @@
                     header_bg: config.headerBg,
                     text_color: config.textColor,
                     logo_pos: config.logoPos,
-                    whatsapp_number: config.whatsappNumber
+                    whatsapp_number: config.whatsappNumber,
+                    delivery_fee: config.deliveryFee
                 }).eq('id', 1);
             } catch (err) {
                 console.error("Error al actualizar configuración:", err);
@@ -732,6 +758,7 @@
             document.getElementById('cfg-site-name').value = config.siteName;
 
             document.getElementById('cfg-whatsapp').value = config.whatsappNumber || '';
+            document.getElementById('cfg-delivery-fee').value = config.deliveryFee || 0;
 
             document.documentElement.style.setProperty('--bg-color', config.bgColor);
             document.documentElement.style.setProperty('--primary-color', config.primaryColor);
@@ -972,10 +999,24 @@
             }
         }
 
+        function toggleDeliveryOption() {
+            const isDelivery = document.getElementById('delivery-checkbox').checked;
+            const addressContainer = document.getElementById('delivery-address-container');
+            if (isDelivery) {
+                addressContainer.classList.remove('hidden');
+            } else {
+                addressContainer.classList.add('hidden');
+            }
+            renderCartItems();
+        }
+
         function renderCartItems() {
             const container = document.getElementById('cart-items-container');
             container.innerHTML = '';
             let total = 0;
+
+            const deliveryFee = parseFloat(config.deliveryFee || 0);
+            document.getElementById('delivery-cost-display').innerText = `+$${deliveryFee.toFixed(2)}`;
 
             if (cart.length === 0) {
                 container.innerHTML = '<p style="text-align: center;">El carrito está vacío.</p>';
@@ -1006,6 +1047,11 @@
                 `;
                 container.appendChild(row);
             });
+
+            const isDelivery = document.getElementById('delivery-checkbox')?.checked || false;
+            if (isDelivery) {
+                total += deliveryFee;
+            }
 
             document.getElementById('cart-total').innerText = `$${total.toFixed(2)}`;
         }
@@ -1047,6 +1093,15 @@
                 return;
             }
 
+            const isDelivery = document.getElementById('delivery-checkbox').checked;
+            const deliveryAddress = document.getElementById('delivery-address').value.trim();
+
+            if (isDelivery && !deliveryAddress) {
+                alert("Por favor ingresa tu dirección para realizar la entrega a domicilio.");
+                document.getElementById('delivery-address').focus();
+                return;
+            }
+
             showToast("Procesando compra...");
 
             let orderSummary = `🛍️ *Nuevo Pedido - ${config.siteName || "Mi Tienda"}*\n\n`;
@@ -1070,11 +1125,21 @@
                 }
             }
 
+            if (isDelivery) {
+                const deliveryFee = parseFloat(config.deliveryFee || 0);
+                grandTotal += deliveryFee;
+                orderSummary += `\n🚚 *Envío a domicilio:* $${deliveryFee.toFixed(2)}\n`;
+                orderSummary += `📍 *Dirección de entrega:* ${deliveryAddress}\n`;
+            }
+
             orderSummary += `\n*Total a pagar: $${grandTotal.toFixed(2)}*`;
 
-            // Limpiar carrito local
+            // Limpiar carrito local y campos de entrega
             cart = [];
             localStorage.setItem('app_cart', JSON.stringify(cart));
+            document.getElementById('delivery-checkbox').checked = false;
+            document.getElementById('delivery-address').value = '';
+            document.getElementById('delivery-address-container').classList.add('hidden');
 
             await loadProducts();
             renderCartItems();
