@@ -262,10 +262,10 @@
         }
         .form-group label { font-size: 0.8rem; font-weight: 600; }
         .form-group input, .form-group select {
-            padding: 6px 10px;
+            padding: 8px 10px;
             border: 1px solid #d1d5db;
             border-radius: 4px;
-            font-size: 0.85rem;
+            font-size: 16px; /* Evita zoom molesto y mejora respuesta táctil en móviles */
         }
 
         /* Modales */
@@ -475,13 +475,15 @@
         <div class="modal">
             <h3>Acceso de Administrador</h3>
             <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 15px;">Ingresa la contraseña para acceder al panel de edición.</p>
-            <div class="form-group">
-                <input type="password" id="admin-pass-input" placeholder="Contraseña">
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
-                <button class="btn btn-secondary" onclick="closeLoginModal()">Cancelar</button>
-                <button class="btn btn-primary" onclick="loginAdmin()">Entrar</button>
-            </div>
+            <form onsubmit="event.preventDefault(); loginAdmin();">
+                <div class="form-group">
+                    <input type="password" id="admin-pass-input" placeholder="Contraseña" autocomplete="current-password" required>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeLoginModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Entrar</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -763,7 +765,15 @@
             if (isAdmin) {
                 logoutAdmin();
             } else {
-                document.getElementById('login-modal').classList.add('active');
+                const modal = document.getElementById('login-modal');
+                modal.classList.add('active');
+                const passInput = document.getElementById('admin-pass-input');
+                passInput.value = '';
+                
+                // Forzar despliegue automático del teclado en móviles
+                setTimeout(() => {
+                    passInput.focus();
+                }, 150);
             }
         }
 
