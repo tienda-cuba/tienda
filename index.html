@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">Mi Tienda Virtual</title>
-    
-    <!-- SDK de Supabase -->
+    <!-- Supabase JS Client SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         :root {
             --bg-color: #f4f6f9;
@@ -203,7 +201,7 @@
             justify-content: center;
         }
 
-        /* Panel Flotante de Administración */
+        /* Panel Flotante de Administración (Ventana Arrastrable) */
         #admin-panel {
             position: fixed;
             bottom: 20px;
@@ -285,7 +283,7 @@
         }
         .modal-overlay.active {
             opacity: 1;
-            pointer-events: auto; /* Corrección crítica para móviles */
+            pointer-events: all;
         }
 
         .modal {
@@ -349,9 +347,10 @@
     <header>
         <div class="brand-container">
             <img id="nav-logo" class="header-logo hidden" alt="Logo">
-            <span id="nav-brand-name" class="brand-name">Cargando tienda...</span>
+            <span id="nav-brand-name" class="brand-name">Mi Tienda</span>
         </div>
         <div class="nav-actions">
+            <!-- Botón de Engranaje para abrir/restaurar el panel flotante -->
             <button id="admin-gear-btn" class="btn btn-secondary hidden" onclick="toggleAdminPanel()" title="Abrir Herramientas Admin">⚙️</button>
             <button id="admin-toggle-btn" class="btn btn-secondary" onclick="openLoginModal()">Modo Admin</button>
             <button class="cart-btn" onclick="toggleCart()">
@@ -368,7 +367,7 @@
         </div>
 
         <div id="products-container" class="products-grid">
-            <!-- Productos generados con JS desde Supabase -->
+            <!-- Productos generados con JS -->
         </div>
     </main>
 
@@ -376,6 +375,7 @@
     <div id="admin-panel" class="hidden">
         <div class="admin-header" id="admin-panel-header">
             <span>⚙️ Herramientas Admin</span>
+            <!-- Al tocar X solo oculta la ventana sin salir del modo Admin -->
             <button class="btn btn-secondary" style="padding: 2px 8px;" onclick="closeAdminPanelWindow()">X</button>
         </div>
         <div class="admin-body">
@@ -385,32 +385,32 @@
                 <h4>🎨 Apariencia y Colores</h4>
                 <div class="form-group">
                     <label>Nombre de la Tienda</label>
-                    <input type="text" id="cfg-site-name" onchange="updateConfigInSupabase()">
+                    <input type="text" id="cfg-site-name" oninput="updateConfig()">
                 </div>
                 <div class="form-group">
                     <label>Color Fondo General</label>
-                    <input type="color" id="cfg-bg-color" onchange="updateConfigInSupabase()">
+                    <input type="color" id="cfg-bg-color" onchange="updateConfig()">
                 </div>
                 <div class="form-group">
                     <label>Color Principal (Botones y destacados)</label>
-                    <input type="color" id="cfg-primary-color" onchange="updateConfigInSupabase()">
+                    <input type="color" id="cfg-primary-color" onchange="updateConfig()">
                 </div>
                 <div class="form-group">
                     <label>Color Encabezado</label>
-                    <input type="color" id="cfg-header-bg" onchange="updateConfigInSupabase()">
+                    <input type="color" id="cfg-header-bg" onchange="updateConfig()">
                 </div>
                 <div class="form-group">
                     <label>Color Texto</label>
-                    <input type="color" id="cfg-text-color" onchange="updateConfigInSupabase()">
+                    <input type="color" id="cfg-text-color" onchange="updateConfig()">
                 </div>
             </div>
 
-            <!-- Configuración de WhatsApp -->
+            <!-- Configuración de WhatsApp / Confirmación de Compra -->
             <div class="admin-section">
                 <h4>📱 Confirmación por WhatsApp</h4>
                 <div class="form-group">
-                    <label>Número de WhatsApp (con código de país, ej: 34600000000)</label>
-                    <input type="tel" id="cfg-whatsapp" placeholder="Ej: 5350000000" onchange="updateConfigInSupabase()">
+                    <label>Número de WhatsApp (con código de país, ej: 5350000000)</label>
+                    <input type="tel" id="cfg-whatsapp" placeholder="Ej: 5350000000" oninput="updateConfig()">
                 </div>
             </div>
 
@@ -418,12 +418,12 @@
             <div class="admin-section">
                 <h4>🖼️ Logo / Marca de Agua</h4>
                 <div class="form-group">
-                    <label>Subir Imagen</label>
-                    <input type="file" id="cfg-logo-file" accept="image/*" onchange="handleLogoUpload(event)">
+                    <label>Subir Imagen (PNG/JPG)</label>
+                    <input type="file" id="cfg-logo-file" accept="image/png, image/jpeg" onchange="handleLogoUpload(event)">
                 </div>
                 <div class="form-group">
                     <label>Posición de la Marca</label>
-                    <select id="cfg-logo-pos" onchange="updateConfigInSupabase()">
+                    <select id="cfg-logo-pos" onchange="updateConfig()">
                         <option value="none">Oculta</option>
                         <option value="nav">Encabezado (Junto al título)</option>
                         <option value="pos-top-left">Fondo Arriba Izquierda</option>
@@ -455,7 +455,7 @@
                         <label>Imagen del Producto</label>
                         <input type="file" id="prod-img" accept="image/*" required>
                     </div>
-                    <button type="submit" id="btn-save-prod" class="btn btn-success" style="width: 100%; margin-top: 5px;">Publicar Producto</button>
+                    <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 5px;">Publicar Producto</button>
                 </form>
             </div>
 
@@ -477,15 +477,13 @@
         <div class="modal">
             <h3>Acceso de Administrador</h3>
             <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 15px;">Ingresa la contraseña para acceder al panel de edición.</p>
-            <form onsubmit="event.preventDefault(); loginAdmin();">
-                <div class="form-group">
-                    <input type="password" id="admin-pass-input" placeholder="Contraseña">
-                </div>
-                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
-                    <button type="button" class="btn btn-secondary" onclick="closeLoginModal()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Entrar</button>
-                </div>
-            </form>
+            <div class="form-group">
+                <input type="password" id="admin-pass-input" placeholder="Contraseña">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+                <button class="btn btn-secondary" onclick="closeLoginModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="loginAdmin()">Entrar</button>
+            </div>
         </div>
     </div>
 
@@ -507,13 +505,13 @@
         </div>
     </div>
 
-    <!-- Modal Éxito / WhatsApp -->
+    <!-- Modal Éxito / Enviar Comprobante por WhatsApp -->
     <div id="checkout-modal" class="modal-overlay">
         <div class="modal" style="text-align: center;">
             <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
             <h3 style="margin-bottom: 10px;">¡Gracias por tu compra!</h3>
             <p id="checkout-msg" style="font-size: 0.95rem; color: #4b5563; margin-bottom: 20px;">
-                Tu pedido ha sido procesado con éxito y el inventario se actualizó en la nube.
+                Tu pedido ha sido procesado con éxito y el inventario ha sido actualizado.
             </p>
             <div id="whatsapp-container" style="display: flex; flex-direction: column; gap: 10px;">
                 <!-- Botón de WhatsApp insertado dinámicamente -->
@@ -523,348 +521,149 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast">Notificación</div>
+    <div id="toast">Producto agregado al carrito</div>
 
     <!-- LÓGICA JAVASCRIPT CON SUPABASE -->
     <script>
-        // --- CONEXIÓN CON SUPABASE ---
-        // Reemplaza estas dos constantes con las credenciales de tu proyecto Supabase:
-        const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
-        const SUPABASE_ANON_KEY = 'tu-anon-key-aqui';
+        // --- CONFIGURACIÓN E INICIALIZACIÓN DE SUPABASE ---
+        const SUPABASE_URL = 'https://okovbiocthvchbowybyd.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_-GnEgsH0dN3utpgX047szQ_6q7XCfkV';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        let config = {
-            site_name: "Mi Tienda Virtual",
-            bg_color: "#f4f6f9",
-            primary_color: "#2563eb",
-            header_bg: "#ffffff",
-            text_color: "#1f2937",
-            logo_url: "",
-            logo_pos: "none",
-            admin_pass: "admin123",
-            whatsapp_number: ""
+        const defaultConfig = {
+            siteName: "Mi Tienda Virtual",
+            bgColor: "#f4f6f9",
+            primaryColor: "#2563eb",
+            headerBg: "#ffffff",
+            textColor: "#1f2937",
+            logoData: "",
+            logoPos: "none",
+            adminPass: "admin123",
+            whatsappNumber: ""
         };
 
+        let config = { ...defaultConfig };
         let products = [];
-        let cart = JSON.parse(localStorage.getItem('app_cart')) || []; // El carrito se mantiene por usuario/navegador
+        let cart = JSON.parse(localStorage.getItem('app_cart')) || []; // Carrito local por sesión de usuario
         let isAdmin = false;
 
+        // Inicialización al cargar la página
         window.addEventListener('DOMContentLoaded', async () => {
-            await loadConfigFromSupabase();
-            await renderProducts();
-            updateCartBadge();
             initDraggablePanel();
+            await loadConfig();
+            await loadProducts();
+            updateCartBadge();
         });
 
-        // --- COMPRESOR DE IMÁGENES PARA MÓVILES (Evita consumo excesivo de red) ---
-        function compressImage(file, maxWidth, maxHeight, quality) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-
-                        if (width > height) {
-                            if (width > maxWidth) {
-                                height = Math.round((height * maxWidth) / width);
-                                width = maxWidth;
-                            }
-                        } else {
-                            if (height > maxHeight) {
-                                width = Math.round((width * maxHeight) / height);
-                                height = maxHeight;
-                            }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        canvas.toBlob((blob) => {
-                            resolve(blob);
-                        }, 'image/jpeg', quality);
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // --- SUBIR IMAGEN A SUPABASE STORAGE ---
-        async function uploadFileToSupabase(blobFile, path) {
-            const fileName = `${Date.now()}_${path}`;
-            const { data, error } = await supabase.storage.from('imagenes').upload(fileName, blobFile, {
-                contentType: 'image/jpeg',
-                upsert: true
-            });
-
-            if (error) {
-                console.error("Error subiendo imagen:", error);
-                throw error;
-            }
-
-            const { data: publicUrlData } = supabase.storage.from('imagenes').getPublicUrl(fileName);
-            return publicUrlData.publicUrl;
-        }
-
-        // --- GESTIÓN DE CONFIGURACIÓN CON SUPABASE ---
-        async function loadConfigFromSupabase() {
+        // --- CARGAR Y GUARDAR CONFIGURACIÓN EN SUPABASE ---
+        async function loadConfig() {
             try {
-                const { data, error } = await supabase.from('configuracion').select('*').eq('id', 1).single();
-                if (data) {
-                    config = { ...config, ...data };
+                const { data, error } = await supabaseClient
+                    .from('configuracion')
+                    .select('*')
+                    .eq('id', 1)
+                    .single();
+
+                if (data && !error) {
+                    config = {
+                        siteName: data.site_name || defaultConfig.siteName,
+                        bgColor: data.bg_color || defaultConfig.bgColor,
+                        primaryColor: data.primary_color || defaultConfig.primaryColor,
+                        headerBg: data.header_bg || defaultConfig.headerBg,
+                        textColor: data.text_color || defaultConfig.textColor,
+                        logoData: data.logo_url || "",
+                        logoPos: data.logo_pos || "none",
+                        adminPass: data.admin_pass || defaultConfig.adminPass,
+                        whatsappNumber: data.whatsapp_number || ""
+                    };
                 }
             } catch (err) {
-                console.warn("No se pudo cargar la configuración de Supabase, usando valores por defecto.");
+                console.error("Error al obtener configuración:", err);
             }
             applyConfig();
         }
 
-        function applyConfig() {
-            document.title = config.site_name;
-            document.getElementById('nav-brand-name').innerText = config.site_name;
-            document.getElementById('hero-title').innerText = `¡Bienvenidos a ${config.site_name}!`;
-            document.getElementById('cfg-site-name').value = config.site_name;
-
-            document.getElementById('cfg-whatsapp').value = config.whatsapp_number || '';
-
-            document.documentElement.style.setProperty('--bg-color', config.bg_color);
-            document.documentElement.style.setProperty('--primary-color', config.primary_color);
-            document.documentElement.style.setProperty('--header-bg', config.header_bg);
-            document.documentElement.style.setProperty('--text-color', config.text_color);
-
-            document.getElementById('cfg-bg-color').value = config.bg_color;
-            document.getElementById('cfg-primary-color').value = config.primary_color;
-            document.getElementById('cfg-header-bg').value = config.header_bg;
-            document.getElementById('cfg-text-color').value = config.text_color;
-            document.getElementById('cfg-logo-pos').value = config.logo_pos;
-
-            const navLogo = document.getElementById('nav-logo');
-            const watermark = document.getElementById('watermark-container');
-
-            navLogo.classList.add('hidden');
-            watermark.innerHTML = '';
-            watermark.className = '';
-
-            if (config.logo_url) {
-                if (config.logo_pos === 'nav') {
-                    navLogo.src = config.logo_url;
-                    navLogo.classList.remove('hidden');
-                } else if (config.logo_pos !== 'none') {
-                    watermark.classList.add(config.logo_pos);
-                    const img = document.createElement('img');
-                    img.src = config.logo_url;
-                    watermark.appendChild(img);
-                }
-            }
-        }
-
-        async function updateConfigInSupabase() {
-            config.site_name = document.getElementById('cfg-site-name').value || "Mi Tienda";
-            config.bg_color = document.getElementById('cfg-bg-color').value;
-            config.primary_color = document.getElementById('cfg-primary-color').value;
-            config.header_bg = document.getElementById('cfg-header-bg').value;
-            config.text_color = document.getElementById('cfg-text-color').value;
-            config.logo_pos = document.getElementById('cfg-logo-pos').value;
-            config.whatsapp_number = document.getElementById('cfg-whatsapp').value.trim();
+        async function updateConfig() {
+            config.siteName = document.getElementById('cfg-site-name').value || "Mi Tienda";
+            config.bgColor = document.getElementById('cfg-bg-color').value;
+            config.primaryColor = document.getElementById('cfg-primary-color').value;
+            config.headerBg = document.getElementById('cfg-header-bg').value;
+            config.textColor = document.getElementById('cfg-text-color').value;
+            config.logoPos = document.getElementById('cfg-logo-pos').value;
+            config.whatsappNumber = document.getElementById('cfg-whatsapp').value.trim();
 
             applyConfig();
 
-            const { error } = await supabase.from('configuracion').upsert({
-                id: 1,
-                site_name: config.site_name,
-                bg_color: config.bg_color,
-                primary_color: config.primary_color,
-                header_bg: config.header_bg,
-                text_color: config.text_color,
-                logo_pos: config.logo_pos,
-                whatsapp_number: config.whatsapp_number,
-                logo_url: config.logo_url,
-                admin_pass: config.admin_pass
-            });
-
-            if (error) {
-                alert("Error actualizando la configuración en la nube.");
-            } else {
-                showToast("Configuración guardada en la nube");
+            try {
+                await supabaseClient.from('configuracion').update({
+                    site_name: config.siteName,
+                    bg_color: config.bgColor,
+                    primary_color: config.primaryColor,
+                    header_bg: config.headerBg,
+                    text_color: config.textColor,
+                    logo_pos: config.logoPos,
+                    whatsapp_number: config.whatsappNumber
+                }).eq('id', 1);
+            } catch (err) {
+                console.error("Error al actualizar configuración:", err);
             }
         }
 
         async function handleLogoUpload(event) {
             const file = event.target.files[0];
-            if (file) {
-                showToast("Subiendo logo...");
-                const blob = await compressImage(file, 400, 400, 0.8);
-                const logoPublicUrl = await uploadFileToSupabase(blob, "logo.jpg");
-                config.logo_url = logoPublicUrl;
-                if(config.logo_pos === 'none') config.logo_pos = 'nav';
-                await updateConfigInSupabase();
-            }
-        }
+            if (!file) return;
 
-        // --- GESTIÓN DE PRODUCTOS CON SUPABASE ---
-        async function renderProducts() {
-            const container = document.getElementById('products-container');
-            container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Cargando catálogo...</p>';
+            showToast("Subiendo logo...");
+            const fileExt = file.name.split('.').pop();
+            const fileName = `logo_${Date.now()}.${fileExt}`;
 
-            const { data, error } = await supabase.from('productos').select('*').order('id', { ascending: false });
+            const { data, error } = await supabaseClient.storage
+                .from('imagenes')
+                .upload(fileName, file);
 
             if (error) {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color:red;">Error al cargar productos desde la base de datos.</p>';
+                alert("Error al subir el logo: " + error.message);
                 return;
             }
 
-            products = data || [];
-            container.innerHTML = '';
+            const { data: publicUrlData } = supabaseClient.storage
+                .from('imagenes')
+                .getPublicUrl(fileName);
 
-            if (products.length === 0) {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No hay productos disponibles.</p>';
-                return;
-            }
+            config.logoData = publicUrlData.publicUrl;
+            if (config.logoPos === 'none') config.logoPos = 'nav';
 
-            products.forEach(product => {
-                const card = document.createElement('div');
-                card.className = 'product-card';
+            applyConfig();
 
-                const deleteBtn = isAdmin 
-                    ? `<button class="btn btn-danger" style="margin-top: 5px; width: 100%;" onclick="deleteProduct('${product.id}')">Eliminar Producto</button>` 
-                    : '';
+            await supabaseClient.from('configuracion').update({
+                logo_url: config.logoData,
+                logo_pos: config.logoPos
+            }).eq('id', 1);
 
-                card.innerHTML = `
-                    <img src="${product.image}" class="product-img" alt="${product.name}">
-                    <div class="product-info">
-                        <div class="product-title">${product.name}</div>
-                        <div class="product-price">$${parseFloat(product.price).toFixed(2)}</div>
-                        <div class="product-stock">${product.stock > 0 ? `Stock disponible: ${product.stock}` : '<span style="color:red;">Agotado</span>'}</div>
-                        <button class="btn btn-primary" ${product.stock <= 0 ? 'disabled style="opacity: 0.5;"' : ''} onclick="addToCart('${product.id}')">
-                            ${product.stock > 0 ? 'Añadir al Carrito' : 'Sin Stock'}
-                        </button>
-                        ${deleteBtn}
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        async function saveProduct(event) {
-            event.preventDefault();
-            const btn = document.getElementById('btn-save-prod');
-            btn.disabled = true;
-            btn.innerText = "Subiendo a la nube...";
-
-            try {
-                const name = document.getElementById('prod-name').value;
-                const price = parseFloat(document.getElementById('prod-price').value);
-                const stock = parseInt(document.getElementById('prod-stock').value);
-                const imgFile = document.getElementById('prod-img').files[0];
-
-                if (imgFile) {
-                    const compressedBlob = await compressImage(imgFile, 800, 800, 0.8);
-                    const imageUrl = await uploadFileToSupabase(compressedBlob, "producto.jpg");
-
-                    const { error } = await supabase.from('productos').insert([{
-                        name,
-                        price,
-                        stock,
-                        image: imageUrl
-                    }]);
-
-                    if (error) throw error;
-
-                    await renderProducts();
-                    document.getElementById('add-product-form').reset();
-                    showToast("¡Producto publicado en la nube!");
-                }
-            } catch (err) {
-                alert("Error publicando el producto: " + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Publicar Producto";
-            }
-        }
-
-        async function deleteProduct(id) {
-            if (confirm("¿Estás seguro de eliminar este producto de la nube?")) {
-                const { error } = await supabase.from('productos').delete().eq('id', id);
-                if (!error) {
-                    cart = cart.filter(c => c.id !== id);
-                    localStorage.setItem('app_cart', JSON.stringify(cart));
-                    await renderProducts();
-                    updateCartBadge();
-                    showToast("Producto eliminado");
-                } else {
-                    alert("No se pudo eliminar el producto");
-                }
-            }
-        }
-
-        // --- SISTEMA DE AUTENTICACIÓN Y PANELES ---
-        function openLoginModal() {
-            if (isAdmin) {
-                logoutAdmin();
-            } else {
-                document.getElementById('login-modal').classList.add('active');
-            }
-        }
-
-        function closeLoginModal() {
-            document.getElementById('login-modal').classList.remove('active');
-            document.getElementById('admin-pass-input').value = '';
-        }
-
-        function loginAdmin() {
-            const passInput = document.getElementById('admin-pass-input').value;
-            if (passInput === config.admin_pass) {
-                isAdmin = true;
-                document.getElementById('admin-panel').classList.remove('hidden');
-                document.getElementById('admin-gear-btn').classList.remove('hidden');
-                document.getElementById('admin-toggle-btn').innerText = 'Cerrar Modo Admin';
-                document.getElementById('admin-toggle-btn').classList.replace('btn-secondary', 'btn-danger');
-                closeLoginModal();
-                renderProducts();
-                showToast("Modo Administrador activado");
-            } else {
-                alert("Contraseña incorrecta");
-            }
-        }
-
-        function logoutAdmin() {
-            isAdmin = false;
-            document.getElementById('admin-panel').classList.add('hidden');
-            document.getElementById('admin-gear-btn').classList.add('hidden');
-            document.getElementById('admin-toggle-btn').innerText = 'Modo Admin';
-            document.getElementById('admin-toggle-btn').classList.replace('btn-danger', 'btn-secondary');
-            renderProducts();
-            showToast("Modo Administrador desactivado");
-        }
-
-        function closeAdminPanelWindow() {
-            document.getElementById('admin-panel').classList.add('hidden');
-            showToast("Panel oculto");
-        }
-
-        function toggleAdminPanel() {
-            if (isAdmin) {
-                const panel = document.getElementById('admin-panel');
-                panel.classList.toggle('hidden');
-            }
+            showToast("Logo subido y guardado correctamente");
         }
 
         async function changeAdminPassword() {
             const newPass = document.getElementById('cfg-admin-pass').value;
             if (newPass.trim().length > 0) {
-                config.admin_pass = newPass.trim();
-                await updateConfigInSupabase();
-                document.getElementById('cfg-admin-pass').value = '';
-                showToast("Contraseña de admin actualizada");
+                config.adminPass = newPass.trim();
+                const { error } = await supabaseClient
+                    .from('configuracion')
+                    .update({ admin_pass: config.adminPass })
+                    .eq('id', 1);
+
+                if (!error) {
+                    document.getElementById('cfg-admin-pass').value = '';
+                    showToast("Contraseña actualizada exitosamente");
+                } else {
+                    alert("Error al guardar la nueva contraseña: " + error.message);
+                }
+            } else {
+                alert("Ingresa una contraseña válida");
             }
         }
 
-        // --- ARRASTRE DE VENTANA MÓVIL OPTIMIZADO ---
+        // --- FUNCIONALIDAD VENTANA ARRASTRABLE (DRAG AND DROP) ---
         function initDraggablePanel() {
             const panel = document.getElementById('admin-panel');
             const header = document.getElementById('admin-panel-header');
@@ -900,7 +699,7 @@
             }
 
             function dragTouchStart(e) {
-                if (['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+                if (e.target.tagName === 'BUTTON') return;
                 const touch = e.touches[0];
                 pos3 = touch.clientX;
                 pos4 = touch.clientY;
@@ -909,7 +708,6 @@
             }
 
             function elementTouchDrag(e) {
-                if (e.cancelable) e.preventDefault();
                 const touch = e.touches[0];
                 pos1 = pos3 - touch.clientX;
                 pos2 = pos4 - touch.clientY;
@@ -926,18 +724,228 @@
             }
         }
 
-        // --- CARRITO LOCAL Y CHECKOUT ---
+        // --- APLICACIÓN DE CONFIGURACIÓN Y ESTILOS ---
+        function applyConfig() {
+            document.title = config.siteName;
+            document.getElementById('nav-brand-name').innerText = config.siteName;
+            document.getElementById('hero-title').innerText = `¡Bienvenidos a ${config.siteName}!`;
+            document.getElementById('cfg-site-name').value = config.siteName;
+
+            document.getElementById('cfg-whatsapp').value = config.whatsappNumber || '';
+
+            document.documentElement.style.setProperty('--bg-color', config.bgColor);
+            document.documentElement.style.setProperty('--primary-color', config.primaryColor);
+            document.documentElement.style.setProperty('--header-bg', config.headerBg);
+            document.documentElement.style.setProperty('--text-color', config.textColor);
+
+            document.getElementById('cfg-bg-color').value = config.bgColor;
+            document.getElementById('cfg-primary-color').value = config.primaryColor;
+            document.getElementById('cfg-header-bg').value = config.headerBg;
+            document.getElementById('cfg-text-color').value = config.textColor;
+            document.getElementById('cfg-logo-pos').value = config.logoPos;
+
+            const navLogo = document.getElementById('nav-logo');
+            const watermark = document.getElementById('watermark-container');
+
+            navLogo.classList.add('hidden');
+            watermark.innerHTML = '';
+            watermark.className = '';
+
+            if (config.logoData) {
+                if (config.logoPos === 'nav') {
+                    navLogo.src = config.logoData;
+                    navLogo.classList.remove('hidden');
+                } else if (config.logoPos !== 'none') {
+                    watermark.classList.add(config.logoPos);
+                    const img = document.createElement('img');
+                    img.src = config.logoData;
+                    watermark.appendChild(img);
+                }
+            }
+        }
+
+        // --- SISTEMA DE AUTENTICACIÓN ADMIN Y PANELES ---
+        function openLoginModal() {
+            if (isAdmin) {
+                logoutAdmin();
+            } else {
+                document.getElementById('login-modal').classList.add('active');
+            }
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.remove('active');
+            document.getElementById('admin-pass-input').value = '';
+        }
+
+        function loginAdmin() {
+            const passInput = document.getElementById('admin-pass-input').value;
+            if (passInput === config.adminPass) {
+                isAdmin = true;
+                document.getElementById('admin-panel').classList.remove('hidden');
+                document.getElementById('admin-gear-btn').classList.remove('hidden');
+                document.getElementById('admin-toggle-btn').innerText = 'Cerrar Modo Admin';
+                document.getElementById('admin-toggle-btn').classList.replace('btn-secondary', 'btn-danger');
+                closeLoginModal();
+                renderProducts();
+                showToast("Modo Administrador activado");
+            } else {
+                alert("Contraseña incorrecta");
+            }
+        }
+
+        function logoutAdmin() {
+            isAdmin = false;
+            document.getElementById('admin-panel').classList.add('hidden');
+            document.getElementById('admin-gear-btn').classList.add('hidden');
+            document.getElementById('admin-toggle-btn').innerText = 'Modo Admin';
+            document.getElementById('admin-toggle-btn').classList.replace('btn-danger', 'btn-secondary');
+            renderProducts();
+            showToast("Modo Administrador desactivado");
+        }
+
+        function closeAdminPanelWindow() {
+            document.getElementById('admin-panel').classList.add('hidden');
+            showToast("Panel oculto (sigues en Modo Admin)");
+        }
+
+        function toggleAdminPanel() {
+            if (isAdmin) {
+                const panel = document.getElementById('admin-panel');
+                panel.classList.toggle('hidden');
+            }
+        }
+
+        // --- GESTIÓN DE PRODUCTOS CON SUPABASE ---
+        async function loadProducts() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('productos')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (!error && data) {
+                    products = data;
+                } else if (error) {
+                    console.error("Error cargando productos:", error.message);
+                }
+            } catch (err) {
+                console.error("Error de conexión:", err);
+            }
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('products-container');
+            container.innerHTML = '';
+
+            if (products.length === 0) {
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No hay productos disponibles.</p>';
+                return;
+            }
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+
+                const deleteBtn = isAdmin 
+                    ? `<button class="btn btn-danger" style="margin-top: 5px; width: 100%;" onclick="deleteProduct('${product.id}')">Eliminar Producto</button>` 
+                    : '';
+
+                card.innerHTML = `
+                    <img src="${product.image || 'https://via.placeholder.com/200'}" class="product-img" alt="${product.name}">
+                    <div class="product-info">
+                        <div class="product-title">${product.name}</div>
+                        <div class="product-price">$${parseFloat(product.price).toFixed(2)}</div>
+                        <div class="product-stock">${product.stock > 0 ? `Stock disponible: ${product.stock}` : '<span style="color:red;">Agotado</span>'}</div>
+                        <button class="btn btn-primary" ${product.stock <= 0 ? 'disabled style="opacity: 0.5;"' : ''} onclick="addToCart('${product.id}')">
+                            ${product.stock > 0 ? 'Añadir al Carrito' : 'Sin Stock'}
+                        </button>
+                        ${deleteBtn}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function saveProduct(event) {
+            event.preventDefault();
+            const name = document.getElementById('prod-name').value;
+            const price = parseFloat(document.getElementById('prod-price').value);
+            const stock = parseInt(document.getElementById('prod-stock').value);
+            const imgFile = document.getElementById('prod-img').files[0];
+
+            if (!imgFile) {
+                alert("Por favor selecciona una imagen para el producto.");
+                return;
+            }
+
+            showToast("Subiendo imagen de producto...");
+
+            const fileExt = imgFile.name.split('.').pop();
+            const fileName = `prod_${Date.now()}.${fileExt}`;
+
+            const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                .from('imagenes')
+                .upload(fileName, imgFile);
+
+            if (uploadError) {
+                alert("Error al subir la imagen del producto: " + uploadError.message);
+                return;
+            }
+
+            const { data: publicUrlData } = supabaseClient.storage
+                .from('imagenes')
+                .getPublicUrl(fileName);
+
+            const imageUrl = publicUrlData.publicUrl;
+
+            const { error: insertError } = await supabaseClient
+                .from('productos')
+                .insert([{ name, price, stock, image: imageUrl }]);
+
+            if (insertError) {
+                alert("Error al guardar el producto en la base de datos: " + insertError.message);
+                return;
+            }
+
+            document.getElementById('add-product-form').reset();
+            await loadProducts();
+            showToast("Producto publicado correctamente");
+        }
+
+        async function deleteProduct(id) {
+            if (confirm("¿Estás seguro de eliminar este producto?")) {
+                const { error } = await supabaseClient
+                    .from('productos')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) {
+                    alert("Error al eliminar el producto: " + error.message);
+                    return;
+                }
+
+                cart = cart.filter(c => c.id != id);
+                localStorage.setItem('app_cart', JSON.stringify(cart));
+                await loadProducts();
+                updateCartBadge();
+                showToast("Producto eliminado");
+            }
+        }
+
+        // --- SISTEMA DE CARRITO DE COMPRAS ---
         function addToCart(productId) {
-            const product = products.find(p => String(p.id) === String(productId));
+            const product = products.find(p => p.id == productId);
             if (!product || product.stock <= 0) return;
 
-            const cartItem = cart.find(c => String(c.id) === String(productId));
+            const cartItem = cart.find(c => c.id == productId);
 
             if (cartItem) {
                 if (cartItem.qty < product.stock) {
                     cartItem.qty++;
                 } else {
-                    alert("No puedes agregar más unidades del stock disponible.");
+                    alert("No puedes agregar más unidades de las disponibles en stock.");
                     return;
                 }
             } else {
@@ -976,7 +984,7 @@
             }
 
             cart.forEach(item => {
-                const product = products.find(p => String(p.id) === String(item.id));
+                const product = products.find(p => p.id == item.id);
                 if (!product) return;
 
                 const subtotal = product.price * item.qty;
@@ -987,7 +995,7 @@
                 row.innerHTML = `
                     <div>
                         <div style="font-weight:600;">${product.name}</div>
-                        <div style="font-size:0.85rem; color:#6b7280;">$${product.price.toFixed(2)} c/u</div>
+                        <div style="font-size:0.85rem; color:#6b7280;">$${parseFloat(product.price).toFixed(2)} c/u</div>
                     </div>
                     <div class="cart-controls">
                         <button onclick="changeCartQty('${item.id}', -1)">-</button>
@@ -1003,8 +1011,8 @@
         }
 
         function changeCartQty(id, change) {
-            const item = cart.find(c => String(c.id) === String(id));
-            const product = products.find(p => String(p.id) === String(id));
+            const item = cart.find(c => c.id == id);
+            const product = products.find(p => p.id == id);
             if (!item || !product) return;
 
             if (change === 1) {
@@ -1026,39 +1034,49 @@
         }
 
         function removeFromCart(id) {
-            cart = cart.filter(c => String(c.id) !== String(id));
+            cart = cart.filter(c => c.id != id);
             localStorage.setItem('app_cart', JSON.stringify(cart));
             renderCartItems();
             updateCartBadge();
         }
 
+        // --- FINALIZAR COMPRA & COMPROBANTE WHATSAPP ---
         async function checkout() {
             if (cart.length === 0) {
                 alert("El carrito está vacío");
                 return;
             }
 
-            let orderSummary = `🛍️ *Nuevo Pedido - ${config.site_name || "Mi Tienda"}*\n\n`;
+            showToast("Procesando compra...");
+
+            let orderSummary = `🛍️ *Nuevo Pedido - ${config.siteName || "Mi Tienda"}*\n\n`;
             let grandTotal = 0;
 
-            // Actualizar el stock de los productos comprados directamente en Supabase
-            for (let cartItem of cart) {
-                const product = products.find(p => String(p.id) === String(cartItem.id));
+            for (const cartItem of cart) {
+                const product = products.find(p => p.id == cartItem.id);
                 if (product) {
                     const subtotal = product.price * cartItem.qty;
                     grandTotal += subtotal;
                     orderSummary += `• ${product.name} x${cartItem.qty} - $${subtotal.toFixed(2)}\n`;
 
-                    const newStock = Math.max(0, product.stock - cartItem.qty);
-                    await supabase.from('productos').update({ stock: newStock }).eq('id', product.id);
+                    let newStock = product.stock - cartItem.qty;
+                    if (newStock < 0) newStock = 0;
+
+                    // Descontar inventario directamente en Supabase
+                    await supabaseClient
+                        .from('productos')
+                        .update({ stock: newStock })
+                        .eq('id', product.id);
                 }
             }
 
             orderSummary += `\n*Total a pagar: $${grandTotal.toFixed(2)}*`;
 
+            // Limpiar carrito local
             cart = [];
             localStorage.setItem('app_cart', JSON.stringify(cart));
-            await renderProducts();
+
+            await loadProducts();
             renderCartItems();
             updateCartBadge();
             toggleCart();
@@ -1066,7 +1084,7 @@
             const waContainer = document.getElementById('whatsapp-container');
             waContainer.innerHTML = '';
 
-            const cleanPhone = (config.whatsapp_number || '').replace(/[^0-9]/g, '');
+            const cleanPhone = (config.whatsappNumber || '').replace(/[^0-9]/g, '');
 
             if (cleanPhone.length > 0) {
                 const encodedMsg = encodeURIComponent(orderSummary);
@@ -1074,10 +1092,10 @@
 
                 waContainer.innerHTML = `
                     <p style="font-size: 0.85rem; color: #374151; margin-bottom: 5px;">
-                        Para coordinar el pago y envío, envía tu pedido directamente por WhatsApp:
+                        Para coordinar el pago y envío, envía tu comprobante directamente a nuestro WhatsApp:
                     </p>
                     <a href="${waLink}" target="_blank" class="btn btn-whatsapp" style="text-decoration: none; justify-content: center;">
-                        📲 Enviar Pedido por WhatsApp
+                        📲 Mandar Comprobante de Compra por WhatsApp
                     </a>
                 `;
             }
@@ -1089,6 +1107,7 @@
             document.getElementById('checkout-modal').classList.remove('active');
         }
 
+        // --- NOTIFICACIONES TOAST ---
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.innerText = message;
