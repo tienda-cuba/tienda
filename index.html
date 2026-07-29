@@ -32,7 +32,7 @@
             position: relative;
         }
 
-        /* Marca de agua / Logo flotante personalizado */
+        /* Marca de agua / Logo flotante */
         #watermark-container {
             position: fixed;
             z-index: 1;
@@ -89,7 +89,7 @@
         }
 
         .btn {
-            padding: 8px 16px;
+            padding: 10px 16px;
             border-radius: 6px;
             border: none;
             cursor: pointer;
@@ -97,7 +97,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: transform 0.1s, opacity 0.2s;
+            font-size: 0.95rem;
         }
         .btn:active { transform: scale(0.98); }
         .btn-primary { background-color: var(--primary-color); color: white; }
@@ -201,7 +201,7 @@
             justify-content: center;
         }
 
-        /* Panel Flotante de Administración (Ventana Arrastrable) */
+        /* Panel Flotante de Administración */
         #admin-panel {
             position: fixed;
             bottom: 20px;
@@ -228,9 +228,6 @@
             font-weight: bold;
             cursor: grab;
             user-select: none;
-        }
-        .admin-header:active {
-            cursor: grabbing;
         }
 
         .admin-body {
@@ -260,42 +257,52 @@
             gap: 5px;
             margin-bottom: 8px;
         }
-        .form-group label { font-size: 0.8rem; font-weight: 600; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; }
         .form-group input, .form-group select {
-            padding: 8px 10px;
+            padding: 10px;
             border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 16px; /* Evita zoom molesto y mejora respuesta táctil en móviles */
+            border-radius: 6px;
+            font-size: 16px; /* Evita zoom automático en iPhone/Android */
         }
 
-        /* Modales */
+        /* MODALES (Sistemas de visualización directa) */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
+            background: rgba(0,0,0,0.6);
+            display: none; /* Oculto por defecto */
             justify-content: center;
             align-items: center;
-            z-index: 2000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s;
+            z-index: 9999;
         }
+        
         .modal-overlay.active {
-            opacity: 1;
-            pointer-events: all;
+            display: flex !important; /* Muestra inmediatamente */
         }
 
         .modal {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
+            padding: 24px;
+            border-radius: 12px;
             width: 90%;
             max-width: 450px;
             color: #1f2937;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
         }
 
-        /* Modales específicos */
+        /* Input de contraseña optimizado para móviles */
+        .mobile-input {
+            width: 100%;
+            height: 48px;
+            padding: 10px 14px;
+            font-size: 16px !important;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            outline: none;
+            background-color: #fff;
+            color: #000;
+        }
+
         #cart-modal .cart-item {
             display: flex;
             align-items: center;
@@ -309,8 +316,8 @@
             gap: 8px;
         }
         .cart-controls button {
-            width: 25px;
-            height: 25px;
+            width: 30px;
+            height: 30px;
             border-radius: 4px;
             border: 1px solid #ccc;
             cursor: pointer;
@@ -328,7 +335,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             transform: translateY(150%);
             transition: transform 0.3s ease;
-            z-index: 3000;
+            z-index: 10000;
             font-weight: 600;
         }
         #toast.show {
@@ -403,11 +410,11 @@
                 </div>
             </div>
 
-            <!-- Configuración de WhatsApp / Confirmación de Compra -->
+            <!-- Configuración de WhatsApp -->
             <div class="admin-section">
                 <h4>📱 Confirmación por WhatsApp</h4>
                 <div class="form-group">
-                    <label>Número de WhatsApp (con código de país, ej: 5350000000)</label>
+                    <label>Número de WhatsApp (ej: 5350000000)</label>
                     <input type="tel" id="cfg-whatsapp" placeholder="Ej: 5350000000" oninput="updateConfig()">
                 </div>
             </div>
@@ -470,16 +477,17 @@
         </div>
     </div>
 
-    <!-- Modal Login Admin -->
+    <!-- Modal Login Admin (Optimizado) -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal">
-            <h3>Acceso de Administrador</h3>
-            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 15px;">Ingresa la contraseña para acceder al panel de edición.</p>
+            <h3 style="margin-bottom: 8px;">Acceso de Administrador</h3>
+            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 15px;">Ingresa la contraseña para abrir el panel de edición.</p>
+            
             <form onsubmit="event.preventDefault(); loginAdmin();">
                 <div class="form-group">
-                    <input type="password" id="admin-pass-input" placeholder="Contraseña" autocomplete="current-password" required>
+                    <input type="password" id="admin-pass-input" class="mobile-input" placeholder="Escribe la contraseña..." autocomplete="current-password" required>
                 </div>
-                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                     <button type="button" class="btn btn-secondary" onclick="closeLoginModal()">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Entrar</button>
                 </div>
@@ -492,7 +500,7 @@
         <div class="modal" style="max-width: 500px;">
             <h3>Tu Carrito de Compras</h3>
             <div id="cart-items-container" style="max-height: 300px; overflow-y: auto; margin: 15px 0;">
-                <!-- Elementos del carrito dinámicos -->
+                <!-- Elementos dinámicos -->
             </div>
             <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px;">
                 <span>Total:</span>
@@ -505,7 +513,7 @@
         </div>
     </div>
 
-    <!-- Modal Éxito / Enviar Comprobante por WhatsApp -->
+    <!-- Modal Checkout -->
     <div id="checkout-modal" class="modal-overlay">
         <div class="modal" style="text-align: center;">
             <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
@@ -513,9 +521,7 @@
             <p id="checkout-msg" style="font-size: 0.95rem; color: #4b5563; margin-bottom: 20px;">
                 Tu pedido ha sido procesado con éxito y el inventario ha sido actualizado.
             </p>
-            <div id="whatsapp-container" style="display: flex; flex-direction: column; gap: 10px;">
-                <!-- Botón de WhatsApp insertado dinámicamente -->
-            </div>
+            <div id="whatsapp-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
             <button class="btn btn-secondary" style="width: 100%; margin-top: 12px; justify-content: center;" onclick="closeCheckoutModal()">Cerrar</button>
         </div>
     </div>
@@ -523,14 +529,12 @@
     <!-- Toast Notification -->
     <div id="toast">Cargando...</div>
 
-    <!-- LÓGICA JAVASCRIPT CON INTEGRACIÓN A SUPABASE -->
+    <!-- JS Y SUPABASE -->
     <script>
-        // --- CLIENTE DE SUPABASE ---
         const SUPABASE_URL = "https://okovbiocthvchbowybyd.supabase.co";
         const SUPABASE_KEY = "sb_publishable_-GnEgsH0dN3utpgX047szQ_6q7XCfkV";
         const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-        // --- ESTADO POR DEFECTO Y VARIABLES ---
         let config = {
             siteName: "Mi Tienda Virtual",
             bgColor: "#f4f6f9",
@@ -547,7 +551,6 @@
         let cart = JSON.parse(localStorage.getItem('app_cart')) || [];
         let isAdmin = false;
 
-        // Inicialización al cargar la página
         window.addEventListener('DOMContentLoaded', async () => {
             initDraggablePanel();
             showToast("Cargando datos desde Supabase...");
@@ -560,14 +563,10 @@
             updateCartBadge();
         });
 
-        // Save Cart localmente (el carrito es individual por comprador)
         function saveCart() {
             localStorage.setItem('app_cart', JSON.stringify(cart));
         }
 
-        // --- CONEXIÓN DE DATOS (SUPABASE) ---
-
-        // Fetch Configuración
         async function fetchConfigFromSupabase() {
             if (!supabase) return;
             try {
@@ -586,11 +585,10 @@
                     };
                 }
             } catch (err) {
-                console.warn("Error cargando configuración desde Supabase:", err);
+                console.warn("Error Supabase Config:", err);
             }
         }
 
-        // Fetch Productos
         async function fetchProductsFromSupabase() {
             if (!supabase) return;
             try {
@@ -605,15 +603,14 @@
                     }));
                 }
             } catch (err) {
-                console.warn("Error cargando productos desde Supabase:", err);
+                console.warn("Error Supabase Products:", err);
             }
         }
 
-        // Actualizar Configuración en Supabase
         async function syncConfigToSupabase() {
             if (!supabase) return;
             try {
-                const payload = {
+                await supabase.from('store_config').upsert({
                     id: 1,
                     site_name: config.siteName,
                     bg_color: config.bgColor,
@@ -624,81 +621,52 @@
                     logo_pos: config.logoPos,
                     admin_pass: config.adminPass,
                     whatsapp_number: config.whatsappNumber
-                };
-                await supabase.from('store_config').upsert(payload);
+                });
             } catch (err) {
-                console.error("Error guardando configuración en Supabase:", err);
+                console.error("Error guardando config:", err);
             }
         }
 
-        // --- FUNCIONALIDAD VENTANA ARRASTRABLE (DRAG AND DROP) ---
         function initDraggablePanel() {
             const panel = document.getElementById('admin-panel');
             const header = document.getElementById('admin-panel-header');
-
             let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
-            header.onmousedown = dragMouseDown;
-            header.ontouchstart = dragTouchStart;
-
-            function dragMouseDown(e) {
+            header.onmousedown = (e) => {
                 if (e.target.tagName === 'BUTTON') return;
                 e.preventDefault();
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                document.onmouseup = closeDragElement;
-                document.onmousemove = elementDrag;
-            }
+                pos3 = e.clientX; pos4 = e.clientY;
+                document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; };
+                document.onmousemove = (e) => {
+                    pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
+                    pos3 = e.clientX; pos4 = e.clientY;
+                    panel.style.top = (panel.offsetTop - pos2) + "px";
+                    panel.style.left = (panel.offsetLeft - pos1) + "px";
+                    panel.style.bottom = 'auto';
+                };
+            };
 
-            function elementDrag(e) {
-                e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos2 = pos4 - e.clientY;
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                panel.style.top = (panel.offsetTop - pos2) + "px";
-                panel.style.left = (panel.offsetLeft - pos1) + "px";
-                panel.style.bottom = 'auto';
-            }
-
-            function closeDragElement() {
-                document.onmouseup = null;
-                document.onmousemove = null;
-            }
-
-            function dragTouchStart(e) {
+            header.ontouchstart = (e) => {
                 if (e.target.tagName === 'BUTTON') return;
                 const touch = e.touches[0];
-                pos3 = touch.clientX;
-                pos4 = touch.clientY;
-                document.ontouchend = closeTouchElement;
-                document.ontouchmove = elementTouchDrag;
-            }
-
-            function elementTouchDrag(e) {
-                const touch = e.touches[0];
-                pos1 = pos3 - touch.clientX;
-                pos2 = pos4 - touch.clientY;
-                pos3 = touch.clientX;
-                pos4 = touch.clientY;
-                panel.style.top = (panel.offsetTop - pos2) + "px";
-                panel.style.left = (panel.offsetLeft - pos1) + "px";
-                panel.style.bottom = 'auto';
-            }
-
-            function closeTouchElement() {
-                document.ontouchend = null;
-                document.ontouchmove = null;
-            }
+                pos3 = touch.clientX; pos4 = touch.clientY;
+                document.ontouchend = () => { document.ontouchend = null; document.ontouchmove = null; };
+                document.ontouchmove = (e) => {
+                    const touch = e.touches[0];
+                    pos1 = pos3 - touch.clientX; pos2 = pos4 - touch.clientY;
+                    pos3 = touch.clientX; pos4 = touch.clientY;
+                    panel.style.top = (panel.offsetTop - pos2) + "px";
+                    panel.style.left = (panel.offsetLeft - pos1) + "px";
+                    panel.style.bottom = 'auto';
+                };
+            };
         }
 
-        // --- APLICACIÓN DE CONFIGURACIÓN Y ESTILOS ---
         function applyConfig() {
             document.title = config.siteName;
             document.getElementById('nav-brand-name').innerText = config.siteName;
             document.getElementById('hero-title').innerText = `¡Bienvenidos a ${config.siteName}!`;
             document.getElementById('cfg-site-name').value = config.siteName;
-
             document.getElementById('cfg-whatsapp').value = config.whatsappNumber || '';
 
             document.documentElement.style.setProperty('--bg-color', config.bgColor);
@@ -760,20 +728,22 @@
             }
         }
 
-        // --- SISTEMA DE AUTENTICACIÓN ADMIN Y PANELES ---
+        // --- APERTURA Y LOGIN DE MODO ADMIN (OPTIMIZADO PARA MÓVILES) ---
         function openLoginModal() {
             if (isAdmin) {
                 logoutAdmin();
             } else {
                 const modal = document.getElementById('login-modal');
-                modal.classList.add('active');
                 const passInput = document.getElementById('admin-pass-input');
+                
                 passInput.value = '';
                 
-                // Forzar despliegue automático del teclado en móviles
-                setTimeout(() => {
-                    passInput.focus();
-                }, 150);
+                // Muestra la ventana modal de forma síncrona
+                modal.classList.add('active');
+                
+                // Enfoca y activa el teclado de forma directa en el evento de toque
+                passInput.focus();
+                passInput.click();
             }
         }
 
@@ -810,13 +780,12 @@
 
         function closeAdminPanelWindow() {
             document.getElementById('admin-panel').classList.add('hidden');
-            showToast("Panel oculto (sigues en Modo Admin)");
+            showToast("Panel oculto");
         }
 
         function toggleAdminPanel() {
             if (isAdmin) {
-                const panel = document.getElementById('admin-panel');
-                panel.classList.toggle('hidden');
+                document.getElementById('admin-panel').classList.toggle('hidden');
             }
         }
 
@@ -832,7 +801,7 @@
             }
         }
 
-        // --- GESTIÓN DE PRODUCTOS ---
+        // --- PRODUCTOS ---
         function renderProducts() {
             const container = document.getElementById('products-container');
             container.innerHTML = '';
@@ -887,19 +856,13 @@
                     showToast("Publicando producto...");
 
                     if (supabase) {
-                        const { error } = await supabase.from('products').insert([{
+                        await supabase.from('products').insert([{
                             id: newProduct.id,
                             name: newProduct.name,
                             price: newProduct.price,
                             stock: newProduct.stock,
                             image: newProduct.image
                         }]);
-
-                        if (error) {
-                            console.error("Error al guardar producto:", error);
-                            alert("Ocurrió un error al guardar en Supabase");
-                            return;
-                        }
                     }
 
                     products.unshift(newProduct);
@@ -926,7 +889,7 @@
             }
         }
 
-        // --- SISTEMA DE CARRITO DE COMPRAS ---
+        // --- CARRITO ---
         function addToCart(productId) {
             const product = products.find(p => p.id === productId);
             if (!product || product.stock <= 0) return;
@@ -937,7 +900,7 @@
                 if (cartItem.qty < product.stock) {
                     cartItem.qty++;
                 } else {
-                    alert("No puedes agregar más unidades de las disponibles en stock.");
+                    alert("No puedes agregar más unidades de las disponibles.");
                     return;
                 }
             } else {
@@ -1011,7 +974,7 @@
                 if (item.qty < product.stock) {
                     item.qty++;
                 } else {
-                    alert("Alcanzaste el límite de stock disponible.");
+                    alert("Alcanzaste el límite de stock.");
                 }
             } else if (change === -1) {
                 item.qty--;
@@ -1032,7 +995,7 @@
             updateCartBadge();
         }
 
-        // --- FINALIZAR COMPRA & ACTUALIZAR STOCK EN SUPABASE ---
+        // --- CHECKOUT ---
         async function checkout() {
             if (cart.length === 0) {
                 alert("El carrito está vacío");
@@ -1049,7 +1012,6 @@
                     grandTotal += subtotal;
                     orderSummary += `• ${product.name} x${cartItem.qty} - $${subtotal.toFixed(2)}\n`;
 
-                    // Descontar stock localmente y en Supabase
                     product.stock = Math.max(0, product.stock - cartItem.qty);
 
                     if (supabase) {
@@ -1060,7 +1022,6 @@
 
             orderSummary += `\n*Total a pagar: $${grandTotal.toFixed(2)}*`;
 
-            // Limpiar carrito
             cart = [];
             saveCart();
             renderProducts();
@@ -1068,7 +1029,6 @@
             updateCartBadge();
             toggleCart();
 
-            // Mostrar modal de confirmación con link de WhatsApp
             const waContainer = document.getElementById('whatsapp-container');
             waContainer.innerHTML = '';
 
@@ -1080,10 +1040,10 @@
 
                 waContainer.innerHTML = `
                     <p style="font-size: 0.85rem; color: #374151; margin-bottom: 5px;">
-                        Para coordinar el pago y envío, envía tu comprobante directamente a nuestro WhatsApp:
+                        Para coordinar el pago y envío, envía tu comprobante a WhatsApp:
                     </p>
                     <a href="${waLink}" target="_blank" class="btn btn-whatsapp" style="text-decoration: none; justify-content: center;">
-                        📲 Mandar Comprobante de Compra por WhatsApp
+                        📲 Enviar Comprobante por WhatsApp
                     </a>
                 `;
             }
@@ -1095,7 +1055,6 @@
             document.getElementById('checkout-modal').classList.remove('active');
         }
 
-        // --- NOTIFICACIONES TOAST ---
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.innerText = message;
@@ -1107,3 +1066,4 @@
     </script>
 </body>
 </html>
+
