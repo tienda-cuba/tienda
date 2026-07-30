@@ -493,26 +493,21 @@
                 </form>
             </div>
 
-            <!-- Configuración de Seguridad -->
-            <div class="admin-section">
-                <h4>🔑 Seguridad</h4>
-                <div class="form-group">
-                    <label>Cambiar Contraseña Admin</label>
-                    <input type="password" id="cfg-admin-pass" placeholder="Nueva contraseña">
-                </div>
-                <button class="btn btn-primary" onclick="changeAdminPassword()" style="width: 100%;">Actualizar Contraseña</button>
-            </div>
-
         </div>
     </div>
 
-    <!-- Modal Login Admin -->
+    <!-- Modal Login Admin con Supabase Auth -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal">
             <h3>Acceso de Administrador</h3>
-            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 15px;">Ingresa la contraseña para acceder al panel de edición.</p>
+            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 15px;">Ingresa tus credenciales registradas en Supabase.</p>
             <div class="form-group">
-                <input type="password" id="admin-pass-input" placeholder="Contraseña">
+                <label>Correo Electrónico</label>
+                <input type="email" id="admin-email-input" placeholder="admin@ejemplo.com">
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" id="admin-pass-input" placeholder="••••••••">
             </div>
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
                 <button class="btn btn-secondary" onclick="closeLoginModal()">Cancelar</button>
@@ -585,9 +580,9 @@
             textColor: "#1f2937",
             logoData: "",
             logoPos: "none",
-            adminPass: "admin123",
             whatsappNumber: "",
-            deliveryFee: 0
+            deliveryFee: 0,
+            tiendaActiva: true
         };
 
         let config = { ...defaultConfig };
@@ -598,10 +593,37 @@
         // Inicialización al cargar la página
         window.addEventListener('DOMContentLoaded', async () => {
             initDraggablePanel();
+            
+            // Verificar si hay una sesión activa de Supabase Auth
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                setAdminModeState(true);
+            }
+
             await loadConfig();
+
+            // Si la tienda está desactivada (Kill-Switch) y NO es administrador, bloquear la web
+            if (config.tiendaActiva === false && !isAdmin) {
+                showKillSwitchScreen();
+                return;
+            }
+
             await loadProducts();
             updateCartBadge();
         });
+
+        // --- PANTALLA MANTENIMIENTO / SUSPENSIÓN (KILL-SWITCH) ---
+        function showKillSwitchScreen() {
+            document.body.innerHTML = `
+                <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px;">
+                    <div style="font-size: 4rem; margin-bottom: 15px;">🔒</div>
+                    <h1 style="color: #1f2937; margin-bottom: 10px; font-size: 1.8rem;">Sitio web en mantenimiento o suspendido temporalmente</h1>
+                    <p style="color: #6b7280; max-width: 500px; line-height: 1.5; font-size: 1rem;">
+                        El acceso a esta tienda se encuentra temporalmente desactivado. Si eres el propietario, inicia sesión o contacta con el soporte técnico.
+                    </p>
+                </div>
+            `;
+        }
 
         // --- CARGAR Y GUARDAR CONFIGURACIÓN EN SUPABASE ---
         async function loadConfig() {
@@ -621,9 +643,9 @@
                         textColor: data.text_color || defaultConfig.textColor,
                         logoData: data.logo_url || "",
                         logoPos: data.logo_pos || "none",
-                        adminPass: data.admin_pass || defaultConfig.adminPass,
                         whatsappNumber: data.whatsapp_number || "",
-                        deliveryFee: data.delivery_fee !== undefined && data.delivery_fee !== null ? parseFloat(data.delivery_fee) : 0
+                        deliveryFee: data.delivery_fee !== undefined && data.delivery_fee !== null ? parseFloat(data.delivery_fee) : 0,
+                        tiendaActiva: data.tienda_activa !== undefined && data.tienda_activa !== null ? data.tienda_activa : true
                     };
                 }
             } catch (err) {
@@ -692,26 +714,6 @@
             }).eq('id', 1);
 
             showToast("Logo subido y guardado correctamente");
-        }
-
-        async function changeAdminPassword() {
-            const newPass = document.getElementById('cfg-admin-pass').value;
-            if (newPass.trim().length > 0) {
-                config.adminPass = newPass.trim();
-                const { error } = await supabaseClient
-                    .from('configuracion')
-                    .update({ admin_pass: config.adminPass })
-                    .eq('id', 1);
-
-                if (!error) {
-                    document.getElementById('cfg-admin-pass').value = '';
-                    showToast("Contraseña actualizada exitosamente");
-                } else {
-                    alert("Error al guardar la nueva contraseña: " + error.message);
-                }
-            } else {
-                alert("Ingresa una contraseña válida");
-            }
         }
 
         // --- FUNCIONALIDAD VENTANA ARRASTRABLE (DRAG AND DROP) ---
@@ -816,7 +818,7 @@
             }
         }
 
-        // --- SISTEMA DE AUTENTICACIÓN ADMIN Y PANELES ---
+        // --- SISTEMA DE AUTENTICACIÓN ADMIN Y PANELES (SUPABASE AUTH) ---
         function openLoginModal() {
             if (isAdmin) {
                 logoutAdmin();
@@ -827,33 +829,61 @@
 
         function closeLoginModal() {
             document.getElementById('login-modal').classList.remove('active');
+            document.getElementById('admin-email-input').value = '';
             document.getElementById('admin-pass-input').value = '';
         }
 
-        function loginAdmin() {
-            const passInput = document.getElementById('admin-pass-input').value;
-            if (passInput === config.adminPass) {
-                isAdmin = true;
-                document.getElementById('admin-panel').classList.remove('hidden');
-                document.getElementById('admin-gear-btn').classList.remove('hidden');
-                document.getElementById('admin-toggle-btn').innerText = 'Cerrar Modo Admin';
-                document.getElementById('admin-toggle-btn').classList.replace('btn-secondary', 'btn-danger');
-                closeLoginModal();
-                renderProducts();
-                showToast("Modo Administrador activado");
-            } else {
-                alert("Contraseña incorrecta");
+        async function loginAdmin() {
+            const email = document.getElementById('admin-email-input').value.trim();
+            const password = document.getElementById('admin-pass-input').value;
+
+            if (!email || !password) {
+                alert("Por favor ingresa tu correo y contraseña.");
+                return;
             }
+
+            showToast("Verificando acceso...");
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) {
+                alert("Error de autenticación: " + error.message);
+                return;
+            }
+
+            setAdminModeState(true);
+            closeLoginModal();
+            renderProducts();
+            showToast("Modo Administrador activado");
         }
 
-        function logoutAdmin() {
-            isAdmin = false;
-            document.getElementById('admin-panel').classList.add('hidden');
-            document.getElementById('admin-gear-btn').classList.add('hidden');
-            document.getElementById('admin-toggle-btn').innerText = 'Modo Admin';
-            document.getElementById('admin-toggle-btn').classList.replace('btn-danger', 'btn-secondary');
+        async function logoutAdmin() {
+            await supabaseClient.auth.signOut();
+            setAdminModeState(false);
             renderProducts();
             showToast("Modo Administrador desactivado");
+        }
+
+        function setAdminModeState(active) {
+            isAdmin = active;
+            const adminPanel = document.getElementById('admin-panel');
+            const gearBtn = document.getElementById('admin-gear-btn');
+            const toggleBtn = document.getElementById('admin-toggle-btn');
+
+            if (active) {
+                adminPanel.classList.remove('hidden');
+                gearBtn.classList.remove('hidden');
+                toggleBtn.innerText = 'Cerrar Modo Admin';
+                toggleBtn.classList.replace('btn-secondary', 'btn-danger');
+            } else {
+                adminPanel.classList.add('hidden');
+                gearBtn.classList.add('hidden');
+                toggleBtn.innerText = 'Modo Admin';
+                toggleBtn.classList.replace('btn-danger', 'btn-secondary');
+            }
         }
 
         function closeAdminPanelWindow() {
