@@ -653,6 +653,58 @@
         let cart = JSON.parse(localStorage.getItem('app_cart')) || []; // Carrito local por sesión de usuario
         let isAdmin = false;
 
+        // --- FUNCIÓN DE COMPRESIÓN AUTOMÁTICA DE IMÁGENES EN EL NAVEGADOR ---
+        async function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) {
+            if (!file || !file.type.startsWith('image/')) return file;
+            if (file.size <= 150 * 1024) return file; // Si pesa menos de 150 KB no hace falta comprimir
+
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > maxWidth || height > maxHeight) {
+                            if (width > height) {
+                                height = Math.round((height * maxWidth) / width);
+                                width = maxWidth;
+                            } else {
+                                width = Math.round((width * maxHeight) / height);
+                                height = maxHeight;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const isPng = file.type === 'image/png';
+                        const mimeType = isPng ? 'image/png' : 'image/jpeg';
+
+                        canvas.toBlob((blob) => {
+                            if (!blob) {
+                                resolve(file);
+                                return;
+                            }
+                            const compressedFile = new File([blob], file.name, {
+                                type: mimeType,
+                                lastModified: Date.now()
+                            });
+                            resolve(compressedFile);
+                        }, mimeType, isPng ? undefined : quality);
+                    };
+                    img.onerror = () => resolve(file);
+                };
+                reader.onerror = () => resolve(file);
+            });
+        }
+
         // Inicialización al cargar la página
         window.addEventListener('DOMContentLoaded', async () => {
             initDraggablePanel();
@@ -759,10 +811,12 @@
 
         // Subida de imágenes de fondo (Fondo General y Encabezado)
         async function handleBgImageUpload(event) {
-            const file = event.target.files[0];
+            let file = event.target.files[0];
             if (!file) return;
 
-            showToast("Subiendo imagen de fondo...");
+            showToast("Optimizando y subiendo imagen de fondo...");
+            file = await compressImage(file, 1600, 1600, 0.8);
+
             const fileExt = file.name.split('.').pop();
             const fileName = `bg_${Date.now()}.${fileExt}`;
 
@@ -795,10 +849,12 @@
         }
 
         async function handleHeaderImageUpload(event) {
-            const file = event.target.files[0];
+            let file = event.target.files[0];
             if (!file) return;
 
-            showToast("Subiendo fondo de encabezado...");
+            showToast("Optimizando y subiendo fondo de encabezado...");
+            file = await compressImage(file, 1600, 1600, 0.8);
+
             const fileExt = file.name.split('.').pop();
             const fileName = `header_${Date.now()}.${fileExt}`;
 
@@ -831,10 +887,12 @@
         }
 
         async function handleLogoUpload(event) {
-            const file = event.target.files[0];
+            let file = event.target.files[0];
             if (!file) return;
 
-            showToast("Subiendo logo...");
+            showToast("Optimizando y subiendo logo...");
+            file = await compressImage(file, 800, 800, 0.85);
+
             const fileExt = file.name.split('.').pop();
             const fileName = `logo_${Date.now()}.${fileExt}`;
 
@@ -1132,14 +1190,15 @@
             const name = document.getElementById('prod-name').value;
             const price = parseFloat(document.getElementById('prod-price').value);
             const stock = parseInt(document.getElementById('prod-stock').value);
-            const imgFile = document.getElementById('prod-img').files[0];
+            let imgFile = document.getElementById('prod-img').files[0];
 
             if (!imgFile) {
                 alert("Por favor selecciona una imagen para el producto.");
                 return;
             }
 
-            showToast("Subiendo imagen de producto...");
+            showToast("Optimizando y subiendo imagen de producto...");
+            imgFile = await compressImage(imgFile, 1000, 1000, 0.8);
 
             const fileExt = imgFile.name.split('.').pop();
             const fileName = `prod_${Date.now()}.${fileExt}`;
