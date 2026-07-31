@@ -6,6 +6,11 @@
     <title id="page-title">Mi Tienda Virtual</title>
     <!-- Supabase JS Client SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Fuentes de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Comic+Neue:wght@700&family=Inter:wght@400;600;700&family=Lora:ital,wght@0,600;1,400&family=Montserrat:wght@400;600;700&family=Oswald:wght@500;700&family=Pacifico&family=Playfair+Display:ital,wght@0,600;1,400&family=Poppins:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --bg-color: #f4f6f9;
@@ -13,18 +18,22 @@
             --header-bg: #ffffff;
             --text-color: #1f2937;
             --card-bg: #ffffff;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: var(--font-family);
             transition: background-color 0.3s, color 0.3s;
         }
 
         body {
             background-color: var(--bg-color);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             color: var(--text-color);
             min-height: 100vh;
             display: flex;
@@ -54,6 +63,8 @@
         /* Header */
         header {
             background-color: var(--header-bg);
+            background-size: cover;
+            background-position: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
@@ -293,6 +304,13 @@
             font-size: 0.85rem;
         }
 
+        /* Rejilla de 2 Columnas para Selección de Colores */
+        .color-picker-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
         /* Modales */
         .modal-overlay {
             position: fixed;
@@ -412,21 +430,62 @@
                     <label>Nombre de la Tienda</label>
                     <input type="text" id="cfg-site-name" oninput="updateConfig()">
                 </div>
+
                 <div class="form-group">
-                    <label>Color Fondo General</label>
-                    <input type="color" id="cfg-bg-color" onchange="updateConfig()">
+                    <label>Fuente de Texto (Estilo Global)</label>
+                    <select id="cfg-font-family" onchange="updateConfig()">
+                        <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI (Predeterminada)</option>
+                        <option value="'Poppins', sans-serif">Poppins (Moderna y Limpia)</option>
+                        <option value="'Roboto', sans-serif">Roboto (Estándar Elegante)</option>
+                        <option value="'Montserrat', sans-serif">Montserrat (Geométrica)</option>
+                        <option value="'Inter', sans-serif">Inter (Minimalista)</option>
+                        <option value="'Playfair Display', serif">Playfair Display (Clásica y Formal)</option>
+                        <option value="'Lora', serif">Lora (Editorial con Serifa)</option>
+                        <option value="'Oswald', sans-serif">Oswald (Urbana / Titulares)</option>
+                        <option value="'Caveat', cursive">Caveat (Manuscrita / Creador)</option>
+                        <option value="'Pacifico', cursive">Pacifico (Cursiva / Tropical)</option>
+                        <option value="'Comic Neue', cursive">Comic Neue (Amigable / Informal)</option>
+                    </select>
+                </div>
+
+                <!-- Rejilla de Colores en 2 Columnas -->
+                <div class="color-picker-grid">
+                    <div class="form-group">
+                        <label>Fondo General</label>
+                        <input type="color" id="cfg-bg-color" onchange="updateConfig()">
+                    </div>
+                    <div class="form-group">
+                        <label>Color Principal</label>
+                        <input type="color" id="cfg-primary-color" onchange="updateConfig()">
+                    </div>
+                    <div class="form-group">
+                        <label>Color Encabezado</label>
+                        <input type="color" id="cfg-header-bg" onchange="updateConfig()">
+                    </div>
+                    <div class="form-group">
+                        <label>Color Texto</label>
+                        <input type="color" id="cfg-text-color" onchange="updateConfig()">
+                    </div>
+                    <div class="form-group">
+                        <label>Color Cajones</label>
+                        <input type="color" id="cfg-card-bg" onchange="updateConfig()">
+                    </div>
+                </div>
+
+                <!-- Imágenes de Fondo desde Galería -->
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>Foto Fondo Web (Galería)</label>
+                    <div style="display:flex; gap:5px;">
+                        <input type="file" id="cfg-bg-file" accept="image/*" onchange="handleBgImageUpload(event)">
+                        <button type="button" class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="removeBgImage()" title="Quitar imagen">X</button>
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label>Color Principal (Botones y destacados)</label>
-                    <input type="color" id="cfg-primary-color" onchange="updateConfig()">
-                </div>
-                <div class="form-group">
-                    <label>Color Encabezado</label>
-                    <input type="color" id="cfg-header-bg" onchange="updateConfig()">
-                </div>
-                <div class="form-group">
-                    <label>Color Texto</label>
-                    <input type="color" id="cfg-text-color" onchange="updateConfig()">
+                    <label>Foto Fondo Encabezado (Galería)</label>
+                    <div style="display:flex; gap:5px;">
+                        <input type="file" id="cfg-header-file" accept="image/*" onchange="handleHeaderImageUpload(event)">
+                        <button type="button" class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="removeHeaderImage()" title="Quitar imagen">X</button>
+                    </div>
                 </div>
             </div>
 
@@ -578,6 +637,10 @@
             primaryColor: "#2563eb",
             headerBg: "#ffffff",
             textColor: "#1f2937",
+            cardBg: "#ffffff",
+            fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+            bgImage: "",
+            headerBgImage: "",
             logoData: "",
             logoPos: "none",
             whatsappNumber: "",
@@ -641,6 +704,10 @@
                         primaryColor: data.primary_color || defaultConfig.primaryColor,
                         headerBg: data.header_bg || defaultConfig.headerBg,
                         textColor: data.text_color || defaultConfig.textColor,
+                        cardBg: data.card_bg || defaultConfig.cardBg,
+                        fontFamily: data.font_family || defaultConfig.fontFamily,
+                        bgImage: data.bg_image || "",
+                        headerBgImage: data.header_bg_image || "",
                         logoData: data.logo_url || "",
                         logoPos: data.logo_pos || "none",
                         whatsappNumber: data.whatsapp_number || "",
@@ -660,6 +727,8 @@
             config.primaryColor = document.getElementById('cfg-primary-color').value;
             config.headerBg = document.getElementById('cfg-header-bg').value;
             config.textColor = document.getElementById('cfg-text-color').value;
+            config.cardBg = document.getElementById('cfg-card-bg').value;
+            config.fontFamily = document.getElementById('cfg-font-family').value;
             config.logoPos = document.getElementById('cfg-logo-pos').value;
             config.whatsappNumber = document.getElementById('cfg-whatsapp').value.trim();
             config.deliveryFee = parseFloat(document.getElementById('cfg-delivery-fee').value) || 0;
@@ -667,7 +736,7 @@
             applyConfig();
 
             try {
-                await supabaseClient.from('configuracion').update({
+                const updatePayload = {
                     site_name: config.siteName,
                     bg_color: config.bgColor,
                     primary_color: config.primaryColor,
@@ -675,11 +744,90 @@
                     text_color: config.textColor,
                     logo_pos: config.logoPos,
                     whatsapp_number: config.whatsappNumber,
-                    delivery_fee: config.deliveryFee
-                }).eq('id', 1);
+                    delivery_fee: config.deliveryFee,
+                    card_bg: config.cardBg,
+                    font_family: config.fontFamily,
+                    bg_image: config.bgImage,
+                    header_bg_image: config.headerBgImage
+                };
+
+                await supabaseClient.from('configuracion').update(updatePayload).eq('id', 1);
             } catch (err) {
                 console.error("Error al actualizar configuración:", err);
             }
+        }
+
+        // Subida de imágenes de fondo (Fondo General y Encabezado)
+        async function handleBgImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showToast("Subiendo imagen de fondo...");
+            const fileExt = file.name.split('.').pop();
+            const fileName = `bg_${Date.now()}.${fileExt}`;
+
+            const { data, error } = await supabaseClient.storage
+                .from('imagenes')
+                .upload(fileName, file);
+
+            if (error) {
+                alert("Error al subir imagen de fondo: " + error.message);
+                return;
+            }
+
+            const { data: publicUrlData } = supabaseClient.storage
+                .from('imagenes')
+                .getPublicUrl(fileName);
+
+            config.bgImage = publicUrlData.publicUrl;
+            applyConfig();
+            await updateConfig();
+            showToast("Fondo de pantalla actualizado");
+        }
+
+        async function removeBgImage() {
+            config.bgImage = "";
+            const bgInput = document.getElementById('cfg-bg-file');
+            if (bgInput) bgInput.value = "";
+            applyConfig();
+            await updateConfig();
+            showToast("Fondo de pantalla eliminado");
+        }
+
+        async function handleHeaderImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showToast("Subiendo fondo de encabezado...");
+            const fileExt = file.name.split('.').pop();
+            const fileName = `header_${Date.now()}.${fileExt}`;
+
+            const { data, error } = await supabaseClient.storage
+                .from('imagenes')
+                .upload(fileName, file);
+
+            if (error) {
+                alert("Error al subir fondo de encabezado: " + error.message);
+                return;
+            }
+
+            const { data: publicUrlData } = supabaseClient.storage
+                .from('imagenes')
+                .getPublicUrl(fileName);
+
+            config.headerBgImage = publicUrlData.publicUrl;
+            applyConfig();
+            await updateConfig();
+            showToast("Fondo de encabezado actualizado");
+        }
+
+        async function removeHeaderImage() {
+            config.headerBgImage = "";
+            const headerInput = document.getElementById('cfg-header-file');
+            if (headerInput) headerInput.value = "";
+            applyConfig();
+            await updateConfig();
+            showToast("Fondo de encabezado eliminado");
         }
 
         async function handleLogoUpload(event) {
@@ -791,11 +939,32 @@
             document.documentElement.style.setProperty('--primary-color', config.primaryColor);
             document.documentElement.style.setProperty('--header-bg', config.headerBg);
             document.documentElement.style.setProperty('--text-color', config.textColor);
+            document.documentElement.style.setProperty('--card-bg', config.cardBg || '#ffffff');
+            document.documentElement.style.setProperty('--font-family', config.fontFamily || "'Segoe UI', sans-serif");
+
+            // Aplicar imagen de fondo general de la web
+            if (config.bgImage) {
+                document.body.style.backgroundImage = `url("${config.bgImage}")`;
+            } else {
+                document.body.style.backgroundImage = 'none';
+            }
+
+            // Aplicar imagen de fondo del encabezado
+            const headerElem = document.querySelector('header');
+            if (headerElem) {
+                if (config.headerBgImage) {
+                    headerElem.style.backgroundImage = `url("${config.headerBgImage}")`;
+                } else {
+                    headerElem.style.backgroundImage = 'none';
+                }
+            }
 
             document.getElementById('cfg-bg-color').value = config.bgColor;
             document.getElementById('cfg-primary-color').value = config.primaryColor;
             document.getElementById('cfg-header-bg').value = config.headerBg;
             document.getElementById('cfg-text-color').value = config.textColor;
+            if (document.getElementById('cfg-card-bg')) document.getElementById('cfg-card-bg').value = config.cardBg || '#ffffff';
+            if (document.getElementById('cfg-font-family')) document.getElementById('cfg-font-family').value = config.fontFamily || "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
             document.getElementById('cfg-logo-pos').value = config.logoPos;
 
             const navLogo = document.getElementById('nav-logo');
